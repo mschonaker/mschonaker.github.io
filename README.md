@@ -1,2 +1,3 @@
 # mschonaker.github.io
-Github Pages Site.
+
+Personal site at [https://mschonaker.github.io](https://mschonaker.github.io)
