@@ -292,6 +292,14 @@ pre code {
   color: #a5d6ff;
 }
 
+.xml-entity {
+  color: #8b949e;
+}
+
+pre code {
+  color: #c9d1d9;
+}
+
 .article-content code:not(pre code) {
   background: #1e3a5f;
   padding: 3px 8px;
