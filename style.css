@@ -30,7 +30,7 @@ body {
 }
 
 .prompt {
-  color: #3fb950;
+  color: #58a6ff;
   font-weight: 500;
 }
 
@@ -48,7 +48,7 @@ body {
   display: inline-block;
   width: 8px;
   height: 16px;
-  background: #3fb950;
+  background: #58a6ff;
   animation: blink 1s step-end infinite;
   vertical-align: middle;
   margin-left: 2px;
@@ -80,14 +80,14 @@ body {
 }
 
 .post-actions a {
-  color: #3fb950;
+  color: #58a6ff;
   text-decoration: none;
   margin-right: 15px;
   font-size: 13px;
 }
 
 .post-actions a:hover {
-  color: #56d364;
+  color: #79c0ff;
 }
 
 .input-area {
@@ -163,7 +163,7 @@ body {
 }
 
 .modal-buttons button {
-  background: #3fb950;
+  background: #58a6ff;
   border: none;
   color: white;
   font-family: inherit;
@@ -175,7 +175,7 @@ body {
 }
 
 .modal-buttons button:hover {
-  background: #238636;
+  background: #388bfd;
 }
 
 .modal-buttons button:last-child {
@@ -190,7 +190,7 @@ body {
 }
 
 .article-link {
-  color: #3fb950;
+  color: #58a6ff;
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
@@ -215,7 +215,7 @@ body {
 }
 
 .back-link:hover {
-  color: #3fb950;
+  color: #58a6ff;
 }
 
 .article-content h1 {
