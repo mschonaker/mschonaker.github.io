@@ -40,11 +40,12 @@ function escapeHtmlEntities(text) {
 }
 
 function highlightXmlCode(code) {
-  const escaped = escapeHtmlEntities(code);
-  return escaped
-    .replace(/(&lt;)(\/?)([\w-]+)(&gt;)/g, '<span class="xml-entity">$1</span>$2<span class="xml-tag">$3</span><span class="xml-entity">$4</span>')
-    .replace(/(\s)([\w-]+)(=)/g, '$1<span class="xml-attr">$2</span>$3')
-    .replace(/(&quot;)([^&]*)(&quot;)/g, '<span class="xml-entity">$1</span><span class="xml-value">$2</span><span class="xml-entity">$3</span>');
+  return code
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/&lt;(\/?[\w-]+)/g, '&lt;<span class="xml-tag">$1</span>')
+    .replace(/(\s[\w-]+)=/g, ' <span class="xml-attr">$1</span>=')
+    .replace(/"([^"]*)"/g, '"<span class="xml-value">$1</span>"');
 }
 
 function parseMarkdown(text) {
@@ -55,8 +56,8 @@ function parseMarkdown(text) {
     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/gim, '<em>$1</em>')
     .replace(/```(\w+)?\n([\s\S]*?)```/gim, (match, lang, code) => {
-      const highlighted = lang === 'xml' ? highlightXmlCode(code) : escapeHtmlEntities(code);
-      return '<pre><code class="lang-' + (lang || '') + '">' + highlighted + '</code></pre>';
+      const highlighted = lang === 'xml' ? highlightXmlCode(code) : code;
+      return '<pre><code class="lang-' + (lang || '') + '">' + escapeHtmlEntities(highlighted) + '</code></pre>';
     })
     .replace(/`([^`]+)`/gim, (match, code) => {
       return '<code>' + escapeHtmlEntities(code) + '</code>';
