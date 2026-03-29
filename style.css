@@ -254,8 +254,8 @@ body {
 }
 
 .article-content pre {
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: #1e3a5f;
+  border: 1px solid #2d5a87;
   border-radius: 8px;
   padding: 16px;
   margin: 16px 0;
@@ -273,7 +273,7 @@ pre code {
 }
 
 .xml-tag {
-  color: #7ee787;
+  color: #ff7b72;
 }
 
 .xml-attr {
@@ -285,10 +285,10 @@ pre code {
 }
 
 .article-content code:not(pre code) {
-  background: #0d1117;
+  background: #1e3a5f;
   padding: 3px 8px;
   border-radius: 4px;
-  color: #3fb950;
+  color: #7dd3fc;
   font-size: 13px;
 }
 
