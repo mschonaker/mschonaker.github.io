@@ -39,6 +39,13 @@ function escapeHtmlEntities(text) {
     .replace(/'/g, '&#039;');
 }
 
+function highlightXmlCode(code) {
+  return code
+    .replace(/(&lt;\/?[\w-]+)/g, '<span class="xml-tag">$1</span>')
+    .replace(/(\s[\w-]+)=/g, ' <span class="xml-attr">$1</span>=')
+    .replace(/"([^"]*)"/g, '"<span class="xml-value">$1</span>"');
+}
+
 function parseMarkdown(text) {
   let html = text
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -47,7 +54,8 @@ function parseMarkdown(text) {
     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/gim, '<em>$1</em>')
     .replace(/```(\w+)?\n([\s\S]*?)```/gim, (match, lang, code) => {
-      return '<pre><code>' + escapeHtmlEntities(code) + '</code></pre>';
+      const highlighted = lang === 'xml' ? highlightXmlCode(code) : code;
+      return '<pre><code class="lang-' + (lang || '') + '">' + escapeHtmlEntities(highlighted) + '</code></pre>';
     })
     .replace(/`([^`]+)`/gim, (match, code) => {
       return '<code>' + escapeHtmlEntities(code) + '</code>';
