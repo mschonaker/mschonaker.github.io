@@ -5,56 +5,50 @@
 }
 
 body {
-  background: #0a0a0a;
-  color: #00ff00;
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.6;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
   min-height: 100vh;
-  padding: 20px;
+  padding: 40px 20px;
 }
 
 .terminal {
-  max-width: 800px;
+  max-width: 700px;
   margin: 0 auto;
-  position: relative;
 }
 
 .scanlines {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.15),
-    rgba(0, 0, 0, 0.15) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  pointer-events: none;
-  z-index: 1000;
+  display: none;
 }
 
-.header, .output, .input-area {
-  margin-bottom: 20px;
+.header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #333;
 }
 
 .prompt {
-  color: #00ff00;
+  color: #7c3aed;
+  font-weight: 500;
 }
 
 .command {
-  color: #00ff00;
+  color: #e0e0e0;
   margin-left: 8px;
+}
+
+.output {
+  color: #888;
+  margin-bottom: 30px;
 }
 
 .cursor {
   display: inline-block;
   width: 8px;
   height: 16px;
-  background: #00ff00;
+  background: #7c3aed;
   animation: blink 1s step-end infinite;
   vertical-align: middle;
   margin-left: 2px;
@@ -65,54 +59,64 @@ body {
 }
 
 .post {
-  margin-bottom: 15px;
-  padding-left: 10px;
-  border-left: 2px solid #003300;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #16213e;
+  border-radius: 12px;
+  border: 1px solid #0f3460;
 }
 
 .post-content {
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .post-meta {
-  color: #006600;
-  font-size: 12px;
+  color: #666;
+  font-size: 13px;
 }
 
 .post-actions {
-  margin-top: 5px;
+  margin-top: 10px;
 }
 
 .post-actions a {
-  color: #00aa00;
+  color: #7c3aed;
   text-decoration: none;
-  margin-right: 10px;
-  font-size: 12px;
+  margin-right: 15px;
+  font-size: 13px;
 }
 
 .post-actions a:hover {
-  color: #00ff00;
-  text-decoration: underline;
+  color: #a78bfa;
 }
 
 .input-area {
   display: flex;
   align-items: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
 }
 
 .input-area input {
   flex: 1;
-  background: transparent;
-  border: none;
-  color: #00ff00;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  color: #e0e0e0;
   font-family: inherit;
   font-size: inherit;
   margin-left: 8px;
+  padding: 12px 15px;
   outline: none;
 }
 
+.input-area input:focus {
+  border-color: #7c3aed;
+}
+
 .input-area input::placeholder {
-  color: #004400;
+  color: #555;
 }
 
 .modal {
@@ -122,16 +126,17 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.8);
   z-index: 2000;
   justify-content: center;
   align-items: center;
 }
 
 .modal-content {
-  background: #0a0a0a;
-  border: 1px solid #00ff00;
-  padding: 20px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  padding: 25px;
+  border-radius: 12px;
   max-width: 600px;
   width: 90%;
 }
@@ -143,12 +148,13 @@ body {
 
 .modal-content textarea {
   width: 100%;
-  background: #0a0a0a;
-  border: 1px solid #003300;
-  color: #00ff00;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  color: #e0e0e0;
   font-family: inherit;
   font-size: inherit;
-  padding: 10px;
+  padding: 15px;
+  border-radius: 8px;
   resize: vertical;
 }
 
@@ -157,25 +163,37 @@ body {
 }
 
 .modal-buttons button {
-  background: transparent;
-  border: 1px solid #00ff00;
-  color: #00ff00;
+  background: #7c3aed;
+  border: none;
+  color: white;
   font-family: inherit;
   font-size: 14px;
-  padding: 5px 15px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   margin-right: 10px;
 }
 
 .modal-buttons button:hover {
-  background: #00ff00;
-  color: #0a0a0a;
+  background: #6d28d9;
+}
+
+.modal-buttons button:last-child {
+  background: transparent;
+  border: 1px solid #555;
+  color: #aaa;
+}
+
+.modal-buttons button:last-child:hover {
+  border-color: #888;
+  color: #e0e0e0;
 }
 
 .article-link {
-  color: #00ff00;
+  color: #7c3aed;
   text-decoration: none;
   font-size: 16px;
+  font-weight: 500;
 }
 
 .article-link:hover {
@@ -183,80 +201,97 @@ body {
 }
 
 .article-view {
-  padding: 20px 0;
+  padding: 0;
 }
 
 .article-header {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .back-link {
-  color: #00aa00;
+  color: #666;
   text-decoration: none;
   font-size: 14px;
 }
 
 .back-link:hover {
-  color: #00ff00;
-  text-decoration: underline;
+  color: #7c3aed;
 }
 
 .article-content h1 {
-  font-size: 24px;
-  margin: 20px 0 15px 0;
-  color: #00ff00;
+  font-size: 28px;
+  margin: 0 0 10px 0;
+  color: #fff;
+  font-weight: 600;
 }
 
 .article-content h2 {
   font-size: 20px;
-  margin: 18px 0 12px 0;
-  color: #00dd00;
+  margin: 30px 0 12px 0;
+  color: #e0e0e0;
+  font-weight: 600;
 }
 
 .article-content h3 {
   font-size: 16px;
-  margin: 15px 0 10px 0;
-  color: #00cc00;
+  margin: 25px 0 10px 0;
+  color: #ccc;
+  font-weight: 600;
 }
 
 .article-content p {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  color: #c0c0c0;
 }
 
 .article-content ul, .article-content ol {
-  margin: 10px 0 15px 20px;
+  margin: 10px 0 15px 25px;
 }
 
 .article-content li {
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  color: #c0c0c0;
 }
 
 .article-content pre {
-  background: #001100;
-  border: 1px solid #003300;
-  padding: 15px;
-  margin: 15px 0;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
   overflow-x: auto;
 }
 
 .article-content code {
-  background: #001100;
-  padding: 2px 6px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+pre code {
+  color: #e6edf3;
+}
+
+.article-content code:not(pre code) {
+  background: #0d1117;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #7c3aed;
   font-size: 13px;
 }
 
 .article-content strong {
-  color: #00ff00;
-  font-weight: bold;
+  color: #fff;
+  font-weight: 600;
 }
 
 .article-content em {
-  color: #00cc00;
+  color: #a78bfa;
   font-style: italic;
 }
 
 .article-content hr {
   border: none;
-  border-top: 1px solid #003300;
-  margin: 20px 0;
+  border-top: 1px solid #333;
+  margin: 25px 0;
 }
