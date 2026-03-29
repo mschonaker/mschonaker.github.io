@@ -105,23 +105,11 @@ async function renderPosts() {
   }).join('');
 }
 
-function highlightXml(html) {
-  const codeBlockRegex = /<pre><code>([\s\S]*?)<\/code><\/pre>/g;
-  return html.replace(codeBlockRegex, (match, code) => {
-    const highlighted = code
-      .replace(/&lt;(\/?[\w-]+)/g, '&lt;<span class="xml-tag">$1</span>')
-      .replace(/(\s[\w-]+)=/g, ' <span class="xml-attr">$1</span>=')
-      .replace(/"([^"]*)"/g, '"<span class="xml-value">$1</span>"');
-    return `<pre><code>${highlighted}</code></pre>`;
-  });
-}
-
 async function renderArticle(post) {
   try {
     const response = await fetch(post.file);
     const markdown = await response.text();
-    let html = parseMarkdown(markdown);
-    html = highlightXml(html);
+    const html = parseMarkdown(markdown);
     
     postsContainer.innerHTML = `
       <div class="article-view">
