@@ -296,6 +296,26 @@ pre code {
   color: #8b949e;
 }
 
+.hljs-tag {
+  color: #7ee787;
+}
+
+.hljs-name {
+  color: #7ee787;
+}
+
+.hljs-attr {
+  color: #79c0ff;
+}
+
+.hljs-string {
+  color: #a5d6ff;
+}
+
+.hljs-meta {
+  color: #8b949e;
+}
+
 pre code {
   color: #c9d1d9;
 }
