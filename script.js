@@ -8,6 +8,7 @@ const cancelEditBtn = document.getElementById('cancelEdit');
 
 let posts = [];
 let editingId = null;
+let currentView = null;
 
 async function loadPosts() {
   try {
@@ -29,21 +30,98 @@ function formatDate(timestamp) {
   return date.toISOString().replace('T', ' ').substring(0, 19);
 }
 
-function renderPosts() {
+function parseMarkdown(text) {
+  let html = text
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+    .replace(/```(\w+)?\n([\s\S]*?)```/gim, '<pre><code>$2</code></pre>')
+    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+    .replace(/^- (.*$)/gim, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/(\d+)\. (.*$)/gim, '<li>$2</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/---/g, '<hr>');
+  
+  html = html.replace(/^(<h[1-3]>.*<\/h[1-3]>\n?)+/gim, (match) => match);
+  html = html.replace(/(<ul>.*<\/ul>\n?)+/g, (match) => match.replace(/\n?/g, ''));
+  
+  return '<p>' + html + '</p>';
+}
+
+async function renderPosts() {
   const sorted = [...posts].sort((a, b) => b.timestamp - a.timestamp);
   
-  postsContainer.innerHTML = sorted.map(post => `
-    <div class="post" id="post-${post.id}">
-      <div class="post-content">${escapeHtml(post.content)}</div>
-      <div class="post-meta">
-        <span class="prompt">></span> ${formatDate(post.timestamp)}
+  if (currentView) {
+    const post = posts.find(p => p.id === currentView);
+    if (post && post.type === 'article') {
+      await renderArticle(post);
+      return;
+    }
+  }
+  
+  postsContainer.innerHTML = sorted.map(post => {
+    if (post.type === 'article') {
+      return `
+        <div class="post" id="post-${post.id}">
+          <div class="post-content">
+            <a href="#" onclick="viewArticle('${post.id}'); return false;" class="article-link">
+              ${escapeHtml(post.title)}
+            </a>
+          </div>
+          <div class="post-meta">
+            <span class="prompt">></span> ${formatDate(post.timestamp)}
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="post" id="post-${post.id}">
+        <div class="post-content">${escapeHtml(post.content)}</div>
+        <div class="post-meta">
+          <span class="prompt">></span> ${formatDate(post.timestamp)}
+        </div>
+        <div class="post-actions">
+          <a href="#" onclick="openEditModal('${post.id}'); return false;">edit</a>
+          <a href="#" onclick="deletePost('${post.id}'); return false;">delete</a>
+        </div>
       </div>
-      <div class="post-actions">
-        <a href="#" onclick="openEditModal('${post.id}'); return false;">edit</a>
-        <a href="#" onclick="deletePost('${post.id}'); return false;">delete</a>
+    `;
+  }).join('');
+}
+
+async function renderArticle(post) {
+  try {
+    const response = await fetch(post.file);
+    const markdown = await response.text();
+    const html = parseMarkdown(markdown);
+    
+    postsContainer.innerHTML = `
+      <div class="article-view">
+        <div class="article-header">
+          <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
+        </div>
+        <div class="article-content">${html}</div>
       </div>
-    </div>
-  `).join('');
+    `;
+  } catch (error) {
+    postsContainer.innerHTML = '<div class="post">Error loading article</div>';
+  }
+}
+
+function viewArticle(id) {
+  currentView = id;
+  const post = posts.find(p => p.id === id);
+  if (post) {
+    renderArticle(post);
+  }
+}
+
+function closeArticle() {
+  currentView = null;
+  renderPosts();
 }
 
 function escapeHtml(text) {

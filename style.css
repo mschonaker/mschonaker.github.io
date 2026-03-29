@@ -171,3 +171,92 @@ body {
   background: #00ff00;
   color: #0a0a0a;
 }
+
+.article-link {
+  color: #00ff00;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.article-link:hover {
+  text-decoration: underline;
+}
+
+.article-view {
+  padding: 20px 0;
+}
+
+.article-header {
+  margin-bottom: 20px;
+}
+
+.back-link {
+  color: #00aa00;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  color: #00ff00;
+  text-decoration: underline;
+}
+
+.article-content h1 {
+  font-size: 24px;
+  margin: 20px 0 15px 0;
+  color: #00ff00;
+}
+
+.article-content h2 {
+  font-size: 20px;
+  margin: 18px 0 12px 0;
+  color: #00dd00;
+}
+
+.article-content h3 {
+  font-size: 16px;
+  margin: 15px 0 10px 0;
+  color: #00cc00;
+}
+
+.article-content p {
+  margin-bottom: 12px;
+}
+
+.article-content ul, .article-content ol {
+  margin: 10px 0 15px 20px;
+}
+
+.article-content li {
+  margin-bottom: 5px;
+}
+
+.article-content pre {
+  background: #001100;
+  border: 1px solid #003300;
+  padding: 15px;
+  margin: 15px 0;
+  overflow-x: auto;
+}
+
+.article-content code {
+  background: #001100;
+  padding: 2px 6px;
+  font-size: 13px;
+}
+
+.article-content strong {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.article-content em {
+  color: #00cc00;
+  font-style: italic;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid #003300;
+  margin: 20px 0;
+}
