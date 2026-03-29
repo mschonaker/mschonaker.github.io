@@ -238,11 +238,13 @@ function deletePost(id) {
   }
 }
 
-newPostInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    addPost(newPostInput.value);
-  }
-});
+if (newPostInput) {
+  newPostInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      addPost(newPostInput.value);
+    }
+  });
+}
 
 saveEditBtn.addEventListener('click', () => {
   if (editingId) {
