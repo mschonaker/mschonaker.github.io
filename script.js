@@ -30,6 +30,15 @@ function formatDate(timestamp) {
   return date.toISOString().replace('T', ' ').substring(0, 19);
 }
 
+function escapeHtmlEntities(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function parseMarkdown(text) {
   let html = text
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -37,8 +46,12 @@ function parseMarkdown(text) {
     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-    .replace(/```(\w+)?\n([\s\S]*?)```/gim, '<pre><code>$2</code></pre>')
-    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+    .replace(/```(\w+)?\n([\s\S]*?)```/gim, (match, lang, code) => {
+      return '<pre><code>' + escapeHtmlEntities(code) + '</code></pre>';
+    })
+    .replace(/`([^`]+)`/gim, (match, code) => {
+      return '<code>' + escapeHtmlEntities(code) + '</code>';
+    })
     .replace(/^- (.*$)/gim, '<li>$1</li>')
     .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
     .replace(/(\d+)\. (.*$)/gim, '<li>$2</li>')
