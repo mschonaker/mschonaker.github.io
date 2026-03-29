@@ -1,5 +1,12 @@
 [
   {
+    "id": "zig001",
+    "type": "article",
+    "title": "Running Zig Master in Docker",
+    "file": "_posts/running-zig-master-in-docker.md",
+    "timestamp": 1774826809
+  },
+  {
     "id": "maven001",
     "type": "article",
     "title": "Understanding Maven's Release Lifecycle with GitHub Packages",
