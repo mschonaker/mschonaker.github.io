@@ -121,7 +121,6 @@ async function renderArticle(post) {
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
         <div class="article-content">
-          <h1>${escapeHtml(post.title)}</h1>
           ${html}
         </div>
       </div>
