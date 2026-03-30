@@ -34,10 +34,34 @@ function parseMarkdown(text) {
   return marked.parse(text);
 }
 
+function getHashParams() {
+  const hash = window.location.hash.slice(1);
+  if (hash.startsWith('article/')) {
+    return hash.replace('article/', '');
+  }
+  return null;
+}
+
+function setHash(id) {
+  window.location.hash = 'article/' + id;
+}
+
+function clearHash() {
+  history.replaceState(null, '', window.location.pathname);
+}
+
 async function renderPosts() {
   const sorted = [...posts].sort((a, b) => b.timestamp - a.timestamp);
   
-  if (currentView) {
+  const hashId = getHashParams();
+  if (hashId) {
+    const post = posts.find(p => p.id === hashId);
+    if (post && post.type === 'article') {
+      currentView = hashId;
+      await renderArticle(post);
+      return;
+    }
+  } else if (currentView) {
     const post = posts.find(p => p.id === currentView);
     if (post && post.type === 'article') {
       await renderArticle(post);
@@ -50,7 +74,7 @@ async function renderPosts() {
       return `
         <div class="post" id="post-${post.id}">
           <div class="post-content">
-            <a href="#" onclick="viewArticle('${post.id}'); return false;" class="article-link">
+            <a href="#article/${post.id}" class="article-link">
               ${escapeHtml(post.title)}
             </a>
           </div>
@@ -86,7 +110,10 @@ async function renderArticle(post) {
         <div class="article-header">
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
-        <div class="article-content">${html}</div>
+        <div class="article-content">
+          <h1>${escapeHtml(post.title)}</h1>
+          ${html}
+        </div>
       </div>
     `;
   } catch (error) {
@@ -104,8 +131,18 @@ function viewArticle(id) {
 
 function closeArticle() {
   currentView = null;
+  clearHash();
   renderPosts();
 }
+
+window.addEventListener('hashchange', () => {
+  const hashId = getHashParams();
+  if (hashId) {
+    viewArticle(hashId);
+  } else {
+    closeArticle();
+  }
+});
 
 function escapeHtml(text) {
   const div = document.createElement('div');
