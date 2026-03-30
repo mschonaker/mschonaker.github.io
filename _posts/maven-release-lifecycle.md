@@ -2,6 +2,8 @@
 
 The Maven release process is a cornerstone of Java artifact management. At its core, Maven's release lifecycle orchestrates a crucial transition: moving from development versions (SNAPSHOTs) to stable, immutable releases.
 
+Traditionally, hosting Maven artifacts meant paying for solutions like Sonatype Nexus, JFrog Artifactory, or cloud repositories. **GitHub Packages changed this** - it offers free hosting for Maven artifacts on public repositories, meaning you can publish and consume Java packages without paying a dime. This democratizes the release process for open source projects and individual developers alike.
+
 ## The Release Process
 
 1. Validates your project is in a releasable state with no SNAPSHOT dependencies
@@ -28,7 +30,7 @@ Add to `~/.m2/settings.xml`:
 </server>
 ```
 
-Add SCM to your `pom.xml`:
+Add SCM and distribution management to your `pom.xml`:
 
 ```xml
 <scm>
@@ -36,7 +38,16 @@ Add SCM to your `pom.xml`:
   <developerConnection>scm:git:git@github.com:user/repo.git</developerConnection>
   <url>https://github.com/user/repo</url>
 </scm>
+
+<distributionManagement>
+  <repository>
+    <id>github</id>
+    <url>https://maven.pkg.github.com/OWNER/REPOSITORY</url>
+  </repository>
+</distributionManagement>
 ```
+
+With this setup, running `mvn clean release:prepare release:perform` will tag your code in GitHub and push the final artifacts to your free GitHub Packages repository - no paid infrastructure required.
 
 ## Consuming Released Artifacts
 
