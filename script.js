@@ -3,6 +3,14 @@ const postsContainer = document.getElementById('posts');
 let posts = [];
 let currentView = null;
 
+marked.use(markedHighlight({
+  langPrefix: 'language-',
+  highlight(code, lang) {
+    const language = Prism.languages[lang] ? lang : 'plaintext';
+    return Prism.highlight(code, Prism.languages[language] || Prism.languages.plaintext, language);
+  }
+}));
+
 async function loadPosts() {
   try {
     const response = await fetch('posts.json');
@@ -30,12 +38,7 @@ function formatDate(timestamp) {
 }
 
 function parseMarkdown(text) {
-  const renderer = new marked.Renderer();
-  renderer.code = function(code, lang) {
-    const language = Prism.languages[lang] ? lang : 'plaintext';
-    return `<pre class="language-${language}"><code class="language-${language}">${Prism.highlight(code, Prism.languages[language] || Prism.languages.plaintext, language)}</code></pre>`;
-  };
-  return marked.parse(text, { renderer });
+  return marked.parse(text);
 }
 
 function getHashParams() {
