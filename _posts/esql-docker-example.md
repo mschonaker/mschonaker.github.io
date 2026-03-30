@@ -6,7 +6,6 @@ ES|QL (Elasticsearch Query Language) is a pipe-based language that lets you quer
 
 ```bash
 docker run -d \
-  --name elasticsearch \
   -p 9200:9200 \
   -e discovery.type=single-node \
   -e xpack.security.enabled=false \
@@ -70,5 +69,4 @@ Result:
 
 - [ES|QL Reference](https://www.elastic.co/docs/reference/query-languages/esql)
 - [ES|QL Commands](https://www.elastic.co/docs/reference/query-languages/esql/esql-commands)
-- [ES|QL Functions](https://www.elastic.co/docs/reference/query-languages/esql/esql-functions)
 
