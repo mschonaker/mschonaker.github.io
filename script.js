@@ -14,11 +14,21 @@ async function loadPosts() {
   try {
     const response = await fetch('posts.json');
     posts = await response.json();
-    renderPosts();
   } catch (error) {
     posts = [];
-    renderPosts();
   }
+  
+  const hashId = getHashParams();
+  if (hashId) {
+    const post = posts.find(p => p.id === hashId);
+    if (post && post.type === 'article') {
+      currentView = hashId;
+      await renderArticle(post);
+      return;
+    }
+  }
+  
+  renderPosts();
 }
 
 function generateId() {
