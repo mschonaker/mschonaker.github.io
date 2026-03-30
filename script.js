@@ -3,13 +3,16 @@ const postsContainer = document.getElementById('posts');
 let posts = [];
 let currentView = null;
 
-marked.use(markedHighlight({
-  langPrefix: 'language-',
-  highlight(code, lang) {
-    const language = Prism.languages[lang] ? lang : 'plaintext';
-    return Prism.highlight(code, Prism.languages[language] || Prism.languages.plaintext, language);
+marked.use({
+  renderer: {
+    code(code, language) {
+      const lang = language || 'plaintext';
+      const langExists = Prism.languages[lang];
+      const highlighted = langExists ? Prism.highlight(code, Prism.languages[lang], lang) : code;
+      return `<pre class="language-${lang}"><code class="language-${lang}">${highlighted}</code></pre>`;
+    }
   }
-}));
+});
 
 async function loadPosts() {
   try {
