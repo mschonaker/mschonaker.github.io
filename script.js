@@ -3,17 +3,6 @@ const postsContainer = document.getElementById('posts');
 let posts = [];
 let currentView = null;
 
-marked.use({
-  renderer: {
-    code(code, language) {
-      const lang = language || 'plaintext';
-      const langExists = Prism.languages[lang];
-      const highlighted = langExists ? Prism.highlight(code, Prism.languages[lang], lang) : code;
-      return `<pre class="language-${lang}"><code class="language-${lang}">${highlighted}</code></pre>`;
-    }
-  }
-});
-
 async function loadPosts() {
   try {
     const response = await fetch('posts.json');
@@ -142,6 +131,7 @@ async function renderArticle(post) {
         </div>
       </div>
     `;
+    Prism.highlightAllUnder(postsContainer);
   } catch (error) {
     postsContainer.innerHTML = '<div class="post">Error loading article</div>';
   }
