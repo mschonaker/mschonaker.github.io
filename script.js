@@ -113,19 +113,12 @@ async function renderPosts() {
         `;
       }
     }
-    const isInitialPost = sorted.indexOf(post) === sorted.length - 1;
     return `
       <div class="post" id="post-${post.id}">
         <div class="post-content">${escapeHtml(post.content)}</div>
         <div class="post-meta">
           <span class="prompt">></span> ${formatDate(post.timestamp)}
         </div>
-        ${!isInitialPost ? `
-        <div class="post-actions">
-          <a href="#" onclick="openEditModal('${post.id}'); return false;">edit</a>
-          <a href="#" onclick="deletePost('${post.id}'); return false;">delete</a>
-        </div>
-        ` : ''}
       </div>
     `;
   }));
