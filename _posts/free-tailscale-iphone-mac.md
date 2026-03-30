@@ -74,11 +74,4 @@ The AI will:
 
 That's it. **big pickle** (the model running this) did all of that just now. What a chad.
 
-## Why This Matters
 
-- Zero dollars
-- Write from your phone, anywhere
-- The AI handles git, writing, everything
-- Your Mac is the engine, your phone is the terminal
-
-The future is vibecoding from your couch.
