@@ -4,24 +4,14 @@ ES|QL (Elasticsearch Query Language) is a pipe-based language that lets you quer
 
 ## Start Elasticsearch
 
-Create a `docker-compose.yml`:
-
-```yaml
-services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - "9200:9200"
-```
-
-Run it:
-
 ```bash
-docker compose up -d
+docker run -d \
+  --name elasticsearch \
+  -p 9200:9200 \
+  -e discovery.type=single-node \
+  -e xpack.security.enabled=false \
+  -e ES_JAVA_OPTS=-Xms512m -Xmx512m \
+  docker.elastic.co/elasticsearch/elasticsearch:9.3.2
 ```
 
 ## Create Index and Ingest Data
@@ -78,6 +68,7 @@ Result:
 
 ## Further Reading
 
-- [ES|QL Reference](https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html)
-- [ES|QL Commands](https://www.elastic.co/guide/en/elasticsearch/reference/current/esql-commands.html)
-- [ES|QL Functions](https://www.elastic.co/guide/en/elasticsearch/reference/current/esql-functions.html)
+- [ES|QL Reference](https://www.elastic.co/docs/reference/query-languages/esql)
+- [ES|QL Commands](https://www.elastic.co/docs/reference/query-languages/esql/esql-commands)
+- [ES|QL Functions](https://www.elastic.co/docs/reference/query-languages/esql/esql-functions)
+
