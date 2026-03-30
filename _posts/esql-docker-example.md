@@ -69,4 +69,5 @@ Result:
 
 - [ES|QL Reference](https://www.elastic.co/docs/reference/query-languages/esql)
 - [ES|QL Commands](https://www.elastic.co/docs/reference/query-languages/esql/esql-commands)
+- [ES|QL Functions and Operators](https://www.elastic.co/docs/reference/query-languages/esql/esql-functions-operators)
 
