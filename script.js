@@ -79,20 +79,39 @@ async function renderPosts() {
     }
   }
   
-  postsContainer.innerHTML = sorted.map(post => {
+  const articleLinks = await Promise.all(sorted.map(async post => {
     if (post.type === 'article') {
-      return `
-        <div class="post" id="post-${post.id}">
-          <div class="post-content">
-            <a href="#article/${post.id}" class="article-link">
-              ${escapeHtml(post.title)}
-            </a>
+      try {
+        const res = await fetch(post.file);
+        const md = await res.text();
+        const match = md.match(/^# (.+)$/m);
+        const title = match ? match[1] : 'Untitled';
+        return `
+          <div class="post" id="post-${post.id}">
+            <div class="post-content">
+              <a href="#article/${post.id}" class="article-link">
+                ${escapeHtml(title)}
+              </a>
+            </div>
+            <div class="post-meta">
+              <span class="prompt">></span> ${formatDate(post.timestamp)}
+            </div>
           </div>
-          <div class="post-meta">
-            <span class="prompt">></span> ${formatDate(post.timestamp)}
+        `;
+      } catch (e) {
+        return `
+          <div class="post" id="post-${post.id}">
+            <div class="post-content">
+              <a href="#article/${post.id}" class="article-link">
+                Article
+              </a>
+            </div>
+            <div class="post-meta">
+              <span class="prompt">></span> ${formatDate(post.timestamp)}
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
     }
     return `
       <div class="post" id="post-${post.id}">
@@ -106,14 +125,15 @@ async function renderPosts() {
         </div>
       </div>
     `;
-  }).join('');
+  }));
+  
+  postsContainer.innerHTML = articleLinks.join('');
 }
 
 async function renderArticle(post) {
   try {
     const response = await fetch(post.file);
-    let markdown = await response.text();
-    markdown = markdown.replace(/^# .+\n+/, '');
+    const markdown = await response.text();
     const html = parseMarkdown(markdown);
     
     postsContainer.innerHTML = `
@@ -122,7 +142,6 @@ async function renderArticle(post) {
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
         <div class="article-content">
-          <h1>${escapeHtml(post.title)}</h1>
           ${html}
         </div>
       </div>
