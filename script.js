@@ -119,10 +119,6 @@ async function renderPosts() {
         <div class="post-meta">
           <span class="prompt">></span> ${formatDate(post.timestamp)}
         </div>
-        <div class="post-actions">
-          <a href="#" onclick="openEditModal('${post.id}'); return false;">edit</a>
-          <a href="#" onclick="deletePost('${post.id}'); return false;">delete</a>
-        </div>
       </div>
     `;
   }));
