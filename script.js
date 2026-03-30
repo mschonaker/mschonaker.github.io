@@ -30,7 +30,12 @@ function formatDate(timestamp) {
 }
 
 function parseMarkdown(text) {
-  return marked.parse(text);
+  const renderer = new marked.Renderer();
+  renderer.code = ({ text, lang }) => {
+    const language = Prism.languages[lang] ? lang : 'plaintext';
+    return `<pre class="language-${language}"><code class="language-${language}">${Prism.highlight(text, Prism.languages[language] || Prism.languages.plaintext, language)}</code></pre>`;
+  };
+  return marked.parse(text, { renderer });
 }
 
 function getHashParams() {
