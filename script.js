@@ -131,7 +131,20 @@ async function renderArticle(post) {
         </div>
       </div>
     `;
-    Prism.highlightAllUnder(postsContainer);
+    try {
+      postsContainer.querySelectorAll('pre code').forEach(block => {
+        const classes = block.className.split(' ').filter(c => c.startsWith('language-'));
+        if (classes.length) {
+          const lang = classes[0].replace('language-', '');
+          if (Prism.languages[lang]) {
+            block.classList.add('language-' + lang);
+            block.innerHTML = Prism.highlight(block.textContent, Prism.languages[lang], lang);
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Highlight error:', e);
+    }
   } catch (error) {
     postsContainer.innerHTML = '<div class="post">Error loading article</div>';
   }
