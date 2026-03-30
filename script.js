@@ -112,7 +112,8 @@ async function renderPosts() {
 async function renderArticle(post) {
   try {
     const response = await fetch(post.file);
-    const markdown = await response.text();
+    let markdown = await response.text();
+    markdown = markdown.replace(/^# .+\n+/, '');
     const html = parseMarkdown(markdown);
     
     postsContainer.innerHTML = `
@@ -121,6 +122,7 @@ async function renderArticle(post) {
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
         <div class="article-content">
+          <h1>${escapeHtml(post.title)}</h1>
           ${html}
         </div>
       </div>
