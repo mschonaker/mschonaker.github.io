@@ -31,9 +31,9 @@ function formatDate(timestamp) {
 
 function parseMarkdown(text) {
   const renderer = new marked.Renderer();
-  renderer.code = ({ text, lang }) => {
+  renderer.code = function(code, lang) {
     const language = Prism.languages[lang] ? lang : 'plaintext';
-    return `<pre class="language-${language}"><code class="language-${language}">${Prism.highlight(text, Prism.languages[language] || Prism.languages.plaintext, language)}</code></pre>`;
+    return `<pre class="language-${language}"><code class="language-${language}">${Prism.highlight(code, Prism.languages[language] || Prism.languages.plaintext, language)}</code></pre>`;
   };
   return marked.parse(text, { renderer });
 }
