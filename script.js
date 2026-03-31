@@ -109,17 +109,20 @@ async function renderPosts() {
         `;
       }
     }
+    const isWelcome = post.id === 'hello001';
     return `
       <div class="post" id="post-${post.id}">
         <div class="post-content">${escapeHtml(post.content)}</div>
-        <div class="post-meta">
-          ${formatDate(post.timestamp)}
-        </div>
+        ${!isWelcome ? `<div class="post-meta">${formatDate(post.timestamp)}</div>` : ''}
       </div>
     `;
   }));
   
-  postsContainer.innerHTML = articleLinks.join('');
+  const welcomePost = articleLinks.find((_, i) => sorted[i]?.id === 'hello001');
+  const otherPosts = articleLinks.filter((_, i) => sorted[i]?.id !== 'hello001');
+  const orderedPosts = [...otherPosts, welcomePost].filter(Boolean);
+  
+  postsContainer.innerHTML = orderedPosts.join('');
 }
 
 async function renderArticle(post) {
