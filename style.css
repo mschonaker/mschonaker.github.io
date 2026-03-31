@@ -223,6 +223,12 @@ a:visited {
   margin-left: 10px;
 }
 
+.article-content > .article-date {
+  display: block;
+  margin-left: 0;
+  margin-bottom: 20px;
+}
+
 .article-summary {
   color: #888;
   font-size: 14px;
