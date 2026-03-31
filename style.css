@@ -217,6 +217,19 @@ a:visited {
   text-decoration: underline;
 }
 
+.article-date {
+  color: #666;
+  font-size: 13px;
+  margin-left: 10px;
+}
+
+.article-summary {
+  color: #888;
+  font-size: 14px;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
 .article-view {
   padding: 0;
 }
@@ -280,7 +293,7 @@ a:visited {
 }
 
 .article-content .mermaid {
-  margin: 32px auto !important;
+  margin: 48px auto !important;
   text-align: center;
   display: block;
 }
