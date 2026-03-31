@@ -39,35 +39,57 @@ public interface SearchService<T> {
 }
 ```
 
-No Spring types in the core. The adapter lives in your infrastructure module and handles the translation:
+No Spring types anywhere near your core. The adapter uses the official Elasticsearch client:
 
 ```java
-// Infrastructure module - depends on Spring
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+// Infrastructure module - official client only
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.*;
 
 public class ElasticSearchAdapter<T> implements SearchService<T> {
-    private final ElasticsearchOperations operations;
+    private final ElasticsearchClient client;
     private final Class<T> documentClass;
+    private final String index;
 
-    public ElasticSearchAdapter(ElasticsearchOperations operations, Class<T> documentClass) {
-        this.operations = operations;
+    public ElasticSearchAdapter(ElasticsearchClient client, Class<T> documentClass, String index) {
+        this.client = client;
         this.documentClass = documentClass;
+        this.index = index;
     }
 
     @Override
     public void index(String id, T document) {
-        operations.save(document, IndexCoordinates.of(id));
+        client.index(i -> i.index(index).id(id).document(document));
     }
 
     @Override
     public Optional<T> get(String id) {
-        return Optional.ofNullable(operations.load(id, documentClass));
+        GetResponse<T> response = client.get(g -> g.index(index).id(id), documentClass);
+        return response.found() ? Optional.of(response.source()) : Optional.empty();
     }
 }
 ```
 
-The core module has zero dependencies. Your domain objects never touch Spring annotations or types.
+Same interface, different implementation for tests:
+
+```java
+// Test module - in-memory implementation
+public class InMemorySearchAdapter<T> implements SearchService<T> {
+    private final Map<String, T> store = new ConcurrentHashMap<>();
+
+    @Override
+    public void index(String id, T document) {
+        store.put(id, document);
+    }
+
+    @Override
+    public Optional<T> get(String id) {
+        return Optional.ofNullable(store.get(id));
+    }
+}
+```
+
+No Spring in sight. Swap implementations at runtime - same interface, completely different backends.
 
 ## The Functional Approach
 
