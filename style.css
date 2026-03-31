@@ -279,6 +279,11 @@ a:visited {
   overflow-x: auto;
 }
 
+.article-content .mermaid {
+  margin: 24px 0;
+  text-align: center;
+}
+
 .article-content code {
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-size: 13px;

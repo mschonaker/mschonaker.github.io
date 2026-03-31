@@ -36,7 +36,8 @@ function parseMarkdown(text) {
     if (lang === 'mermaid') {
       return `<div class="mermaid">${code}</div>`;
     }
-    return `<pre><code class="language-${lang}">${code}</code></pre>`;
+    const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<pre><code class="language-${lang}">${escaped}</code></pre>`;
   };
   return marked.parse(text, { renderer });
 }
