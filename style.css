@@ -51,6 +51,7 @@ a:visited {
 .prompt-host {
   color: #c9d1d9;
   font-weight: 500;
+  text-shadow: 0 0 10px rgba(201, 209, 217, 0.5);
 }
 
 .command {
