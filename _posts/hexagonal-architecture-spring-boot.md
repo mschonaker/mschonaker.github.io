@@ -42,6 +42,9 @@ public interface SearchService<T> {
 Implement the "adapter" in your infrastructure module:
 
 ```java
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+
 public class ElasticSearchAdapter<T> implements SearchService<T> {
     private final ElasticsearchOperations operations;
 
