@@ -30,18 +30,19 @@ This is essentially what Guice does - explicit module definitions instead of cla
 
 ## What About Redis, Elasticsearch, and Other Infrastructure?
 
-Same pattern. Define a "port" (interface) in your core module:
+Same pattern. Define a "port" (interface) in your core module with generics:
 
 ```java
-public interface SearchService {
-    void indexData(String id, Object data);
+public interface SearchService<T> {
+    void index(String id, T document);
+    Optional<T> get(String id);
 }
 ```
 
 Implement the "adapter" in your infrastructure module:
 
 ```java
-public class ElasticSearchAdapter implements SearchService {
+public class ElasticSearchAdapter<T> implements SearchService<T> {
     private final ElasticsearchOperations operations;
 
     public ElasticSearchAdapter(ElasticsearchOperations operations) {
@@ -49,24 +50,20 @@ public class ElasticSearchAdapter implements SearchService {
     }
 
     @Override
-    public void indexData(String id, Object data) {
-        operations.save(data);
+    public void index(String id, T document) {
+        operations.save(document, IndexCoordinates.of(id));
+    }
+
+    @Override
+    public Optional<T> get(String id) {
+        return Optional.ofNullable(operations.load(id, (Class<T>) null));
     }
 }
 ```
 
-Wire it up:
+## The Functional Approach
 
-```java
-@Bean
-public SearchService searchService(ElasticsearchOperations elasticsearchOperations) {
-    return new ElasticSearchAdapter(elasticsearchOperations);
-}
-```
-
-## The Functional Alternative (2026 Style)
-
-If you want to go even further, Spring's Functional Bean Definition API lets you skip `@Configuration` entirely:
+Skip `@Configuration` entirely. Use Spring's Functional Bean Definition API:
 
 ```java
 public static void main(String[] args) {
