@@ -362,3 +362,10 @@ pre code {
   border-top: 1px solid #333;
   margin: 25px 0;
 }
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+}
