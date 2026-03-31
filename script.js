@@ -127,7 +127,8 @@ async function renderPosts() {
 async function renderArticle(post) {
   try {
     const response = await fetch(post.file);
-    const markdown = await response.text();
+    let markdown = await response.text();
+    markdown = markdown.replace(/^---[\s\S]*?---\n/, '');
     const html = parseMarkdown(markdown);
     
     postsContainer.innerHTML = `
