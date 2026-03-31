@@ -20,12 +20,13 @@ Size: ~52MB (Q4 quantized)
 [ONNX](https://onnxruntime.ai/) (Open Neural Network eXchange) is a universal format for ML models. An ONNX model is a computation graph that defines how data flows through layers.
 
 **The flow:**
-```
-Token IDs [4] → Embedding Layer → 6 Transformer Layers → [4 × 384]
-                                                           ↓
-                                                    Mean Pooling
-                                                           ↓
-                                                   [384] Embedding
+```mermaid
+flowchart LR
+    A["Token IDs [4]"] --> B["Embedding Layer"]
+    B --> C["6 Transformer Layers"]
+    C --> D["Token Embeddings\n[4 × 384]"]
+    D --> E["Mean Pooling"]
+    E --> F["Embedding\n[384]"]
 ```
 
 ONNX Runtime executes this graph efficiently on CPU/GPU. It handles:
