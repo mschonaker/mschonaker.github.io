@@ -1,5 +1,7 @@
 # Understanding Maven's Release Lifecycle with GitHub Packages
 
+![Maven header](/images/maven-header.png)
+
 The Maven release process is a cornerstone of Java artifact management. At its core, Maven's release lifecycle orchestrates a crucial transition: moving from development versions (SNAPSHOTs) to stable, immutable releases.
 
 Traditionally, hosting Maven artifacts meant paying for solutions like Sonatype Nexus, JFrog Artifactory, or cloud repositories. **GitHub Packages changed this** - it offers free hosting for Maven artifacts on public repositories, meaning you can publish and consume Java packages without paying a dime. This democratizes the release process for open source projects and individual developers alike.
