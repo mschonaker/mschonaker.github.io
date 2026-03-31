@@ -1,9 +1,12 @@
-const postsContainer = document.getElementById('posts');
-
+let postsContainer;
 let posts = [];
 let currentView = null;
 
+mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
 async function loadPosts() {
+  postsContainer = document.getElementById('posts');
+  if (!postsContainer) return;
   try {
     const response = await fetch('posts.json');
     posts = await response.json();
@@ -30,7 +33,14 @@ function formatDate(timestamp) {
 }
 
 function parseMarkdown(text) {
-  return marked.parse(text);
+  const renderer = new marked.Renderer();
+  renderer.code = function(code, lang) {
+    if (lang === 'mermaid') {
+      return `<div class="mermaid">${code}</div>`;
+    }
+    return `<pre><code class="language-${lang}">${code}</code></pre>`;
+  };
+  return marked.parse(text, { renderer });
 }
 
 function getHashParams() {
@@ -132,6 +142,7 @@ async function renderArticle(post) {
       </div>
     `;
     try {
+      await mermaid.run({ querySelector: '.mermaid' });
       postsContainer.querySelectorAll('pre code').forEach(block => {
         const classes = block.className.split(' ').filter(c => c.startsWith('language-'));
         if (classes.length) {
@@ -179,4 +190,6 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-loadPosts();
+document.addEventListener('DOMContentLoaded', () => {
+  loadPosts();
+});

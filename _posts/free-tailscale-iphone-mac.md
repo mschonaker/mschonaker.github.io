@@ -1,5 +1,20 @@
 # How to Blog From Your Phone for Free
 
+```mermaid
+flowchart LR
+    iPhone[iPhone<br/>Browser] -->|HTTPS| GitHub[GitHub Pages]
+    iPhone -->|Tailscale VPN| Mac[Mac<br/>OpenCode Server]
+    Mac -->|Git Push| GitHub
+    
+    subgraph Your Home
+    Mac
+    end
+    
+    subgraph Cloud
+    GitHub
+    end
+```
+
 Here's a wild thought: you can write and publish blog posts from your iPhone, on your couch, using your Mac as a remote server - all for zero dollars. The AI does the work. Let me show you how.
 
 ## The Stack
