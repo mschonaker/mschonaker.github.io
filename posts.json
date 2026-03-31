@@ -1,5 +1,12 @@
 [
   {
+    "id": "zig-onnx-embeddings",
+    "type": "article",
+    "file": "_posts/zig-onnx-embeddings.md",
+    "timestamp": 1743464400,
+    "summary": "Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python."
+  },
+  {
     "id": "gguf-intro",
     "type": "article",
     "file": "_posts/gguf-introduction.md",
