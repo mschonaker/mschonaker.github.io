@@ -1,5 +1,11 @@
 [
   {
+    "id": "hexagonal-spring-boot",
+    "type": "article",
+    "file": "_posts/hexagonal-architecture-spring-boot.md",
+    "timestamp": 1779231600
+  },
+  {
     "id": "esql001",
     "type": "article",
     "file": "_posts/esql-docker-example.md",
