@@ -59,6 +59,7 @@ function clearHash() {
 }
 
 async function renderPosts() {
+  // Sort posts by date descending (newest first)
   const sorted = [...posts].sort((a, b) => b.timestamp - a.timestamp);
   
   const hashId = getHashParams();

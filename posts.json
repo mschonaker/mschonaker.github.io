@@ -1,5 +1,12 @@
 [
   {
+    "id": "java-zig-ffi",
+    "type": "article",
+    "file": "_posts/java-zig-ffi.md",
+    "timestamp": 1743436800,
+    "summary": "Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code."
+  },
+  {
     "id": "zig-onnx-embeddings",
     "type": "article",
     "file": "_posts/zig-onnx-embeddings.md",
