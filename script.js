@@ -27,7 +27,7 @@ async function loadPosts() {
 
 function formatDate(timestamp) {
   const date = new Date(timestamp * 1000);
-  return date.toISOString().replace('T', ' ').substring(0, 19);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function parseMarkdown(text) {
@@ -126,6 +126,9 @@ async function renderArticle(post) {
     const response = await fetch(post.file);
     let markdown = await response.text();
     markdown = markdown.replace(/^---[\s\S]*?---[\n\r]*/, '');
+    const titleMatch = markdown.match(/^# (.+)$/m);
+    const title = titleMatch ? titleMatch[1] : 'Untitled';
+    markdown = markdown.replace(/^# .+$/m, '');
     const html = parseMarkdown(markdown);
     
     postsContainer.innerHTML = `
@@ -134,6 +137,8 @@ async function renderArticle(post) {
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
         <div class="article-content">
+          <h1>${escapeHtml(title)}</h1>
+          <div class="article-date">${formatDate(post.timestamp)}</div>
           ${html}
         </div>
       </div>
