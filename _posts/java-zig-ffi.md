@@ -1,6 +1,6 @@
 # Calling Zig from Java using JNR-FFI
 
-![Zig and Java header](/images/zig-header.png)
+![Java and Zig FFI header](/images/java-zig-ffi.png)
 
 This article shows how to call a Zig compiled library from Java without writing any JNI code. We'll use [JNR-FFI](https://github.com/jnr/jnr-ffi), a pure Java library that can load native libraries dynamically.
 
