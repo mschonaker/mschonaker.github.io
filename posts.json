@@ -1,5 +1,12 @@
 [
   {
+    "id": "gguf-intro",
+    "type": "article",
+    "file": "_posts/gguf-introduction.md",
+    "timestamp": 1743460800,
+    "summary": "GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware."
+  },
+  {
     "id": "hexagonal-spring-boot",
     "type": "article",
     "file": "_posts/hexagonal-architecture-spring-boot.md",
