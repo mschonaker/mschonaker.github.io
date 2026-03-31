@@ -32,9 +32,9 @@ function formatDate(timestamp) {
   const compareDate = new Date(date);
   compareDate.setHours(0, 0, 0, 0);
   if (compareDate > today) {
-    return '> today';
+    return '<span class="prompt">></span> today';
   }
-  return '> ' + date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  return '<span class="prompt">></span> ' + date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function parseMarkdown(text) {
@@ -119,7 +119,7 @@ async function renderPosts() {
       <div class="post" id="post-${post.id}">
         <div class="post-content">${escapeHtml(post.content)}</div>
         <div class="post-meta">
-          <span class="prompt">></span> ${formatDate(post.timestamp)}
+          ${formatDate(post.timestamp)}
         </div>
       </div>
     `;

@@ -43,6 +43,16 @@ a:visited {
   font-weight: 500;
 }
 
+.prompt-at {
+  color: #e06c75;
+  font-weight: 500;
+}
+
+.prompt-host {
+  color: #98c379;
+  font-weight: 500;
+}
+
 .command {
   color: #e0e0e0;
   margin-left: 8px;
