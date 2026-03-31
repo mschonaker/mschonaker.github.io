@@ -89,6 +89,27 @@ public class InMemorySearchAdapter<T> implements SearchService<T> {
 }
 ```
 
+JUnit test using the in-memory adapter:
+
+```java
+class MyServiceTest {
+    private final SearchService<Document> search = new InMemorySearchAdapter<>();
+    private final MyService service = new MyService(search);
+
+    @Test
+    void shouldIndexAndRetrieve() {
+        Document doc = new Document("1", "test content");
+        service.save(doc);
+        
+        Document found = service.findById("1");
+        
+        assertThat(found).isEqualTo(doc);
+    }
+}
+```
+
+No Spring context needed. Just pure Java tests with the interface.
+
 No Spring in sight. Swap implementations at runtime - same interface, completely different backends.
 
 ## The Functional Approach
