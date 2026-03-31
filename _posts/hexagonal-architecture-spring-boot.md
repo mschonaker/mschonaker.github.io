@@ -30,7 +30,7 @@ This is essentially what Guice does - explicit module definitions instead of cla
 
 ## What About Redis, Elasticsearch, and Other Infrastructure?
 
-Same pattern. Define a "port" (interface) in your core module with generics:
+Same pattern. Define a "port" (interface) in your core module using only standard Java:
 
 ```java
 public interface SearchService<T> {
@@ -39,17 +39,20 @@ public interface SearchService<T> {
 }
 ```
 
-Implement the "adapter" in your infrastructure module:
+No Spring types in the core. The adapter lives in your infrastructure module and handles the translation:
 
 ```java
+// Infrastructure module - depends on Spring
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 public class ElasticSearchAdapter<T> implements SearchService<T> {
     private final ElasticsearchOperations operations;
+    private final Class<T> documentClass;
 
-    public ElasticSearchAdapter(ElasticsearchOperations operations) {
+    public ElasticSearchAdapter(ElasticsearchOperations operations, Class<T> documentClass) {
         this.operations = operations;
+        this.documentClass = documentClass;
     }
 
     @Override
@@ -59,10 +62,12 @@ public class ElasticSearchAdapter<T> implements SearchService<T> {
 
     @Override
     public Optional<T> get(String id) {
-        return Optional.ofNullable(operations.load(id, (Class<T>) null));
+        return Optional.ofNullable(operations.load(id, documentClass));
     }
 }
 ```
+
+The core module has zero dependencies. Your domain objects never touch Spring annotations or types.
 
 ## The Functional Approach
 
