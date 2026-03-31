@@ -15,6 +15,26 @@ Embedding: 384 dimensions
 Size: ~52MB (Q4 quantized)
 ```
 
+## What is ONNX Inference?
+
+[ONNX](https://onnxruntime.ai/) (Open Neural Network eXchange) is a universal format for ML models. An ONNX model is a computation graph that defines how data flows through layers.
+
+**The flow:**
+```
+Token IDs [4] → Embedding Layer → 6 Transformer Layers → [4 × 384]
+                                                           ↓
+                                                    Mean Pooling
+                                                           ↓
+                                                   [384] Embedding
+```
+
+ONNX Runtime executes this graph efficiently on CPU/GPU. It handles:
+- Memory management for inputs/outputs
+- Graph optimization (operator fusion, constant folding)
+- Hardware acceleration (AVX, AVX2, AVX-512, OpenMP, CUDA, TensorRT)
+
+The C API lets you load a model, feed it tensors, and read the results—no Python needed.
+
 ## The Approach
 
 Three steps to compute embeddings:
@@ -42,7 +62,7 @@ curl -L -o model.onnx https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/mai
 curl -L -o tokenizer.json https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/main/tokenizer.json
 ```
 
-Or in Zig using std.http:
+Or in Zig using std.process.Child:
 
 ```zig
 var child = std.process.Child.init(
@@ -158,7 +178,7 @@ fn tokenize(allocator: std.mem.Allocator, tokenizer: Tokenizer, text: []const u8
 }
 ```
 
-## Validating the Output
+## Validating the Tokenizer
 
 Let's verify against Python's transformers library:
 
@@ -188,7 +208,7 @@ You can also validate online:
 - [Hugging Face Sentence Transformers Space](https://huggingface.co/spaces/sentence-transformers/Sentence_Transformers_for_semantic_search)
 - [tokenizer.io](https://tokenizer.io/)
 
-## The ONNX Inference Part
+## ONNX Inference
 
 The tokenizer works and produces identical output to Python. Now for the ONNX inference.
 
@@ -267,25 +287,61 @@ The MiniLM-L6-v2 model expects:
 - **3 inputs** (int64 tensors): `input_ids`, `attention_mask`, `token_type_ids`
 - **1 output** (float32): `last_hidden_state` with shape `[batch, seq_len, 384]`
 
-### What is ONNX Inference?
+## Complete Example
 
-[ONNX](https://onnxruntime.ai/) (Open Neural Network eXchange) is a universal format for ML models. An ONNX model is a computation graph that defines how data flows through layers.
+Here's the complete `main.zig` with all the pieces together:
 
-**The flow:**
+```zig
+const std = @import("std");
+const onnx = @cImport(@cInclude("onnx_embed.h"));
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    // Download model and tokenizer
+    try downloadFile(allocator, "https://...", "model.onnx");
+    try downloadFile(allocator, "https://...", "tokenizer.json");
+
+    // Load tokenizer
+    var tokenizer = try loadTokenizer(allocator, "tokenizer.json");
+    defer freeTokenizer(&tokenizer);
+
+    // Tokenize
+    const tokens = try tokenize(allocator, tokenizer, "hello world");
+
+    // Prepare input arrays for ONNX
+    const input_ids = try allocator.alloc(i64, tokens.len);
+    for (tokens, 0..) |id, i| input_ids[i] = @intCast(id);
+
+    const attention_mask = try allocator.alloc(i64, tokens.len);
+    @memset(@constCast(attention_mask), 1);
+
+    const token_type_ids = try allocator.alloc(i64, tokens.len);
+    @memset(@constCast(token_type_ids), 0);
+
+    // Run inference
+    const result = onnx.compute_embedding(
+        "model.onnx",
+        input_ids.ptr,
+        attention_mask.ptr,
+        token_type_ids.ptr,
+        @intCast(tokens.len)
+    );
+
+    // Print embedding
+    std.debug.print("Embedding (first 10 dims): ", .{});
+    for (0..@min(10, result.size)) |i| {
+        std.debug.print("{d:.4}", .{result.data[i]});
+    }
+    std.debug.print("\nEmbedding dimension: {d}\n", .{result.size});
+
+    onnx.free_embedding(result.data);
+}
 ```
-Token IDs [4] → Embedding Layer → 6 Transformer Layers → [4 × 384]
-                                                           ↓
-                                                    Mean Pooling
-                                                           ↓
-                                                   [384] Embedding
-```
 
-ONNX Runtime executes this graph efficiently on CPU/GPU. It handles:
-- Memory management for inputs/outputs
-- Graph optimization (operator fusion, constant folding)
-- Hardware acceleration (AVX, AVX2, AVX-512, OpenMP, CUDA, TensorRT)
-
-The C API lets you load a model, feed it tensors, and read the results—no Python needed.
+The terminal output comes from `std.debug.print`—simple enough.
 
 ## Files
 
