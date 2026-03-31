@@ -45,7 +45,7 @@
     "id": "zig001",
     "type": "article",
     "file": "_posts/running-zig-master-in-docker.md",
-    "timestamp": 1774826809,
+    "timestamp": 1743217200,
     "summary": "How to build and run the latest Zig compiler from source inside a Docker container."
   },
   {
