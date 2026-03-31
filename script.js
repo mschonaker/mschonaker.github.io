@@ -90,9 +90,8 @@ async function renderPosts() {
               <a href="#article/${post.id}" class="article-link">
                 ${escapeHtml(title)}
               </a>
-            </div>
-            <div class="post-meta">
-              <span class="prompt">></span> ${formatDate(post.timestamp)}
+              <span class="article-date"> ${formatDate(post.timestamp)}</span>
+              ${post.summary ? `<div class="article-summary">${escapeHtml(post.summary)}</div>` : ''}
             </div>
           </div>
         `;
@@ -103,9 +102,7 @@ async function renderPosts() {
               <a href="#article/${post.id}" class="article-link">
                 Article
               </a>
-            </div>
-            <div class="post-meta">
-              <span class="prompt">></span> ${formatDate(post.timestamp)}
+              <span class="article-date"> ${formatDate(post.timestamp)}</span>
             </div>
           </div>
         `;

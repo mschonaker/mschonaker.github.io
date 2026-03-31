@@ -3,31 +3,36 @@
     "id": "hexagonal-spring-boot",
     "type": "article",
     "file": "_posts/hexagonal-architecture-spring-boot.md",
-    "timestamp": 1779231600
+    "timestamp": 1779231600,
+    "summary": "Breaking free from Spring annotations in your core business logic using explicit bean registration."
   },
   {
     "id": "esql001",
     "type": "article",
     "file": "_posts/esql-docker-example.md",
-    "timestamp": 1779231600
+    "timestamp": 1779231600,
+    "summary": "Running Elasticsearch with SQL support in Docker for quick local development and testing."
   },
   {
     "id": "tailscale001",
     "type": "article",
     "file": "_posts/free-tailscale-iphone-mac.md",
-    "timestamp": 1775203200
+    "timestamp": 1775203200,
+    "summary": "Setting up free Tailscale VPN to connect your iPhone and Mac without paying for a server."
   },
   {
     "id": "zig001",
     "type": "article",
     "file": "_posts/running-zig-master-in-docker.md",
-    "timestamp": 1774826809
+    "timestamp": 1774826809,
+    "summary": "How to build and run the latest Zig compiler from source inside a Docker container."
   },
   {
     "id": "maven001",
     "type": "article",
     "file": "_posts/maven-release-lifecycle.md",
-    "timestamp": 1743273600
+    "timestamp": 1743273600,
+    "summary": "Understanding Maven's release process and how to properly version your Java projects."
   },
   {
     "id": "hello001",
