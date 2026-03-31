@@ -6,7 +6,7 @@ async function loadPosts() {
   postsContainer = document.getElementById('posts');
   if (!postsContainer) return;
   try {
-    const response = await fetch('posts.json');
+    const response = await fetch('posts.json?v=0b1b777');
     posts = await response.json();
   } catch (error) {
     posts = [];
