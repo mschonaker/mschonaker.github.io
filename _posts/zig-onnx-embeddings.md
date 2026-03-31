@@ -342,6 +342,132 @@ pub fn main() !void {
 }
 ```
 
+### build.zig
+
+```zig
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
+    const exe = b.addExecutable(.{
+        .name = "onnx-embeddings",
+        .target = target,
+        .optimize = optimize,
+    });
+
+    exe.addCSourceFile("onnx_embed.c", .{
+        .dependencies = .{},
+    });
+
+    exe.linkLibC();
+    exe.linkSystemLibrary("onnx");
+
+    b.installArtifact(exe);
+}
+```
+
+### onnx_embed.h
+
+```c
+#ifndef ONNX_EMBED_H
+#define ONNX_EMBED_H
+
+#include <stdint.h>
+
+typedef struct {
+    float* data;
+    int size;
+} EmbeddingResult;
+
+EmbeddingResult compute_embedding(const char* model_path, 
+    const int64_t* input_ids, const int64_t* attention_mask, 
+    const int64_t* token_type_ids, int seq_len);
+
+void free_embedding(float* data);
+
+#endif
+```
+
+### onnx_embed.c
+
+```c
+#include "onnx_embed.h"
+#include <onnxruntime_c_api.h>
+#include <stdlib.h>
+#include <string.h>
+
+EmbeddingResult compute_embedding(const char* model_path, 
+    const int64_t* input_ids, const int64_t* attention_mask, 
+    const int64_t* token_type_ids, int seq_len) {
+    
+    EmbeddingResult result = { .data = NULL, .size = 0 };
+    
+    const OrtApi* ort = OrtGetApiBase()->GetApi(ORTT_API_VERSION);
+    OrtEnv* env = NULL;
+    ort->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "onnx-embeddings", &env);
+    
+    OrtSessionOptions* session_options = NULL;
+    ort->CreateSessionOptions(&session_options);
+    ort->SetIntraOpNumThreads(session_options, 1);
+    ort->SetInterOpNumThreads(session_options, 1);
+    
+    OrtSession* session = NULL;
+    ort->CreateSession(env, model_path, session_options, &session);
+    
+    int64_t input_shape[] = {1, seq_len};
+    size_t input_shape_len = 2;
+    
+    OrtValue* input_tensor_ids = NULL;
+    ort->CreateTensorWithDataAsOrtValue(
+        ort, input_ids, seq_len * sizeof(int64_t),
+        input_shape, input_shape_len, ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64,
+        &input_tensor_ids
+    );
+    
+    float* embedding = malloc(384 * sizeof(float));
+    int64_t output_shape[] = {1, 384};
+    OrtValue* output_tensor = NULL;
+    ort->CreateOrtValue(ort, embedding, 384 * sizeof(float),
+        output_shape, 2, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &output_tensor);
+    
+    const char* input_names[] = {"input_ids", "attention_mask", "token_type_ids"};
+    const char* output_names[] = {"last_hidden_state"};
+    OrtValue* inputs[] = {input_tensor_ids, input_tensor_ids, input_tensor_ids};
+    
+    ort->Run(session, NULL, input_names, inputs, 1, output_names, &output_tensor);
+    
+    float* output_data = NULL;
+    ort->GetTensorMutableData(output_tensor, (void**)&output_data);
+    
+    memset(embedding, 0, 384 * sizeof(float));
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < 384; j++) {
+            embedding[j] += output_data[i * 384 + j];
+        }
+    }
+    for (int j = 0; j < 384; j++) {
+        embedding[j] /= seq_len;
+    }
+    
+    result.data = embedding;
+    result.size = 384;
+    
+    ort->ReleaseValue(input_tensor_ids);
+    ort->ReleaseValue(output_tensor);
+    ort->ReleaseSession(session);
+    ort->ReleaseSessionOptions(session_options);
+    ort->ReleaseEnv(env);
+    
+    return result;
+}
+
+void free_embedding(float* data) {
+    free(data);
+}
+```
+
 The terminal output comes from `std.debug.print`—simple enough.
 
 ## Files
