@@ -1,5 +1,5 @@
 ---
-published: false
+published: true
 ---
 
 # Hexagonal Architecture in Spring Boot: Breaking Free from Annotations
