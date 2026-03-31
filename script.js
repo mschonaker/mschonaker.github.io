@@ -6,7 +6,7 @@ async function loadPosts() {
   postsContainer = document.getElementById('posts');
   if (!postsContainer) return;
   try {
-    const response = await fetch('posts.json?v=0b1b777');
+    const response = await fetch('posts.json');
     posts = await response.json();
   } catch (error) {
     posts = [];
@@ -27,13 +27,6 @@ async function loadPosts() {
 
 function formatDate(timestamp) {
   const date = new Date(timestamp * 1000);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const compareDate = new Date(date);
-  compareDate.setHours(0, 0, 0, 0);
-  if (compareDate > today) {
-    return '<span class="prompt">></span> today';
-  }
   return '<span class="prompt">></span> ' + date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
