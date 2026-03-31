@@ -1,5 +1,12 @@
 [
   {
+    "id": "simd-zig-intro",
+    "type": "article",
+    "file": "_posts/simd-zig-introduction.md",
+    "timestamp": 1743436800,
+    "summary": "Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing."
+  },
+  {
     "id": "java-zig-ffi",
     "type": "article",
     "file": "_posts/java-zig-ffi.md",
