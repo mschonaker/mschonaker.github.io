@@ -231,6 +231,8 @@ a:visited {
   color: #666;
   font-size: 13px;
   margin-left: 10px;
+  display: block;
+  margin-top: 8px;
 }
 
 .article-content > .article-date {
