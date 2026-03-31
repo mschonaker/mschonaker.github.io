@@ -282,8 +282,8 @@ Token IDs [4] → Embedding Layer → 6 Transformer Layers → [4 × 384]
 
 ONNX Runtime executes this graph efficiently on CPU/GPU. It handles:
 - Memory management for inputs/outputs
-- Graph optimization
-- Efficient execution
+- Graph optimization (operator fusion, constant folding)
+- Hardware acceleration (AVX, AVX2, AVX-512, OpenMP, CUDA, TensorRT)
 
 The C API lets you load a model, feed it tensors, and read the results—no Python needed.
 
