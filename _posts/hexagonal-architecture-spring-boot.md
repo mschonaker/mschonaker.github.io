@@ -1,7 +1,3 @@
----
-published: true
----
-
 # Hexagonal Architecture in Spring Boot: Breaking Free from Annotations
 
 The web layer in Spring Boot is fine. Controllers, REST endpoints - they need those annotations to work with Spring MVC's infrastructure. But I've always felt uneasy about scattering `@Component`, `@Service`, and `@Repository` throughout my core business logic. That's not architecture; that's Stockholm syndrome.
