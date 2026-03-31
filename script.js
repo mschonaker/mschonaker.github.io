@@ -197,11 +197,14 @@ function escapeHtml(text) {
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof Prism !== 'undefined') {
     Prism.languages.zig = {
-      'keyword': /\b(align|allowzero|and|anyerror|anytype|anyframe|anyop|as|asm|async|await|break|catch|comptime|const|continue|defer|else|enum|errdefer|error|export|extern|false|fn|for|if|inline|noinline|nosuspend|null|opaque|or|orelse|packed|pub|resume|return|struct|suspend|switch|test|threadlocal|true|try|typeof|undefined|union|unaligned|usingnamespace|var|volatile|while)\b/g,
+      'comment': {
+        pattern: /\/\/.*/g,
+        greedy: true
+      },
       'string': /(["'`])(?:(?!\1)[^\\]|\\.)*?\1/g,
-      'number': /\b\d+\.?\d*\b/g,
-      'comment': /\/\/.*/g,
+      'keyword': /\b(align|allowzero|and|anyerror|anytype|anyframe|anyop|as|asm|async|await|break|catch|comptime|const|continue|defer|else|enum|errdefer|error|export|extern|false|fn|for|if|inline|noinline|nosuspend|null|opaque|or|orelse|packed|pub|resume|return|struct|suspend|switch|test|threadlocal|true|try|typeof|undefined|union|unaligned|usingnamespace|var|volatile|while)\b/g,
       'builtin': /\b(void|bool|u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f16|f32|f64|f128|comptime_int|comptime_float|noreturn|type|anyerror|anyframe|anytype)\b/g,
+      'number': /\b\d+\.?\d*\b/g,
     };
   }
   if (typeof mermaid !== 'undefined') {
