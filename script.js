@@ -198,13 +198,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof Prism !== 'undefined') {
     Prism.languages.zig = {
       'comment': {
-        pattern: /\/\/.*/g,
+        pattern: /\/\/[^\n]*/g,
         greedy: true
       },
-      'string': /(["'`])(?:(?!\1)[^\\]|\\.)*?\1/g,
+      'string': {
+        pattern: /(["'`])(?:(?!\1)[^\\]|\\.)*?\1/g,
+        greedy: true
+      },
       'keyword': /\b(align|allowzero|and|anyerror|anytype|anyframe|anyop|as|asm|async|await|break|catch|comptime|const|continue|defer|else|enum|errdefer|error|export|extern|false|fn|for|if|inline|noinline|nosuspend|null|opaque|or|orelse|packed|pub|resume|return|struct|suspend|switch|test|threadlocal|true|try|typeof|undefined|union|unaligned|usingnamespace|var|volatile|while)\b/g,
       'builtin': /\b(void|bool|u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f16|f32|f64|f128|comptime_int|comptime_float|noreturn|type|anyerror|anyframe|anytype)\b/g,
-      'number': /\b\d+\.?\d*\b/g,
+      'number': {
+        pattern: /\b\d+\.?\d*\b/g,
+        greedy: true
+      },
     };
   }
   if (typeof mermaid !== 'undefined') {
