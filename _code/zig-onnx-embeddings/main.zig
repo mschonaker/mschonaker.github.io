@@ -1,18 +1,19 @@
 const std = @import("std");
+const onnx = @cImport(@cInclude("onnx_embed.h"));
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    std.debug.print("Downloading model and tokenizer...\n", .{});
-
     try downloadFile(
+        allocator,
         "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/main/onnx/model_q4.onnx",
         "model.onnx",
     );
 
     try downloadFile(
+        allocator,
         "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/main/tokenizer.json",
         "tokenizer.json",
     );
@@ -31,9 +32,39 @@ pub fn main() !void {
     }
     std.debug.print("\n", .{});
 
-    std.debug.print("\nNote: ONNX Runtime integration requires installing the library:\n", .{});
-    std.debug.print("  macOS: brew install onnxruntime\n", .{});
-    std.debug.print("  Linux: download from https://onnxruntime.ai/\n", .{});
+    const input_ids = try allocator.alloc(i64, tokens.len);
+    defer allocator.free(input_ids);
+    for (tokens, 0..) |id, i| {
+        input_ids[i] = @intCast(id);
+    }
+
+    const attention_mask = try allocator.alloc(i64, tokens.len);
+    defer allocator.free(attention_mask);
+    @memset(@constCast(attention_mask), 1);
+
+    const token_type_ids = try allocator.alloc(i64, tokens.len);
+    defer allocator.free(token_type_ids);
+    @memset(@constCast(token_type_ids), 0);
+
+    std.debug.print("Running inference...\n", .{});
+
+    const result = onnx.compute_embedding("model.onnx", @as([*]const i64, @ptrCast(input_ids.ptr)), @as([*]const i64, @ptrCast(attention_mask.ptr)), @as([*]const i64, @ptrCast(token_type_ids.ptr)), @intCast(tokens.len));
+
+    std.debug.print("\nEmbedding (first 10 dims): ", .{});
+    for (0..@min(10, @as(usize, @intCast(result.size)))) |i| {
+        if (i > 0) std.debug.print(", ", .{});
+        std.debug.print("{d:.4}", .{result.data[i]});
+    }
+    std.debug.print("\nEmbedding dimension: {d}\n", .{result.size});
+
+    var norm: f32 = 0;
+    for (0..@as(usize, @intCast(result.size))) |i| {
+        const val = result.data[i];
+        norm += val * val;
+    }
+    std.debug.print("Embedding norm: {d:.4}\n", .{@sqrt(norm)});
+
+    onnx.free_embedding(result.data);
 }
 
 const Tokenizer = struct {
@@ -73,6 +104,10 @@ fn loadTokenizer(allocator: std.mem.Allocator, path: []const u8) !Tokenizer {
 }
 
 fn freeTokenizer(tokenizer: *Tokenizer) void {
+    var it = tokenizer.vocab.iterator();
+    while (it.next()) |entry| {
+        tokenizer.vocab.allocator.free(entry.key_ptr.*);
+    }
     tokenizer.vocab.deinit();
 }
 
@@ -126,7 +161,7 @@ fn tokenize(allocator: std.mem.Allocator, tokenizer: Tokenizer, text: []const u8
     return tokens.toOwnedSlice(allocator);
 }
 
-fn downloadFile(url: []const u8, dest: []const u8) !void {
+fn downloadFile(_: std.mem.Allocator, url: []const u8, dest: []const u8) !void {
     if (std.fs.cwd().openFile(dest, .{})) |file| {
         defer file.close();
         std.debug.print("  {s} already exists, skipping\n", .{dest});

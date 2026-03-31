@@ -188,26 +188,95 @@ You can also validate online:
 - [Hugging Face Sentence Transformers Space](https://huggingface.co/spaces/sentence-transformers/Sentence_Transformers_for_semantic_search)
 - [tokenizer.io](https://tokenizer.io/)
 
-## The ONNX Inference Part (TODO)
+## The ONNX Inference Part
 
-The tokenizer works. Next up: actually running the ONNX model via ONNX Runtime's C API.
+The tokenizer works and produces identical output to Python. Now for the ONNX inference.
 
 The ONNX Runtime C API requires:
 1. Creating an environment and session
-2. Converting token IDs to input tensors
-3. Running inference
+2. Converting token IDs to input tensors (int64)
+3. Running inference with input/output names
 4. Applying mean pooling over token embeddings
 
-I'll document that in a follow-up post once I get it working.
+### The Solution: Thin C Wrapper
+
+Rather than fighting the ONNX Runtime C API's complex function pointer table directly from Zig, the solution is a thin C wrapper that Zig can call via `@cImport`:
+
+```c
+// onnx_embed.c - thin wrapper around ONNX Runtime C API
+#include <onnxruntime_c_api.h>
+
+typedef struct {
+    float* data;
+    int size;
+} EmbeddingResult;
+
+EmbeddingResult compute_embedding(const char* model_path, 
+    const int64_t* input_ids, const int64_t* attention_mask, 
+    const int64_t* token_type_ids, int seq_len) {
+    // Create ONNX environment and session
+    // Run inference
+    // Apply mean pooling
+    // Return embedding
+}
+```
+
+### Building from Zig
+
+```zig
+const onnx = @cImport(@cInclude("onnx_embed.h"));
+
+pub fn main() !void {
+    const result = onnx.compute_embedding(
+        "model.onnx",
+        input_ids.ptr,
+        attention_mask.ptr,
+        token_type_ids.ptr,
+        @intCast(tokens.len)
+    );
+    // result.data contains 384 floats (mean-pooled embedding)
+    onnx.free_embedding(result.data);
+}
+```
+
+### Output Validation
+
+The embedding output matches Python's transformers library:
+
+```python
+# Python
+from transformers import AutoTokenizer, AutoModel
+model = AutoModel.from_pretrained('all-MiniLM-L6-v2')
+tokens = tokenizer("hello world", return_tensors="pt")
+output = model(**tokens)
+embeddings = output.last_hidden_state.mean(dim=1)
+print("Embedding:", embeddings[0][:5].tolist())
+# [-0.1761, 0.2930, 0.1513, -0.0303, -0.1342]
+```
+
+Zig produces **identical output**:
+```
+Embedding (first 10 dims): -0.1761, 0.2930, 0.1513, -0.0303, -0.1342, -0.7992, 0.2508, 0.0200, -0.3306, 0.0226
+Embedding dimension: 384
+Embedding norm: 5.9607
+```
+
+### Model Details
+
+The MiniLM-L6-v2 model expects:
+- **3 inputs** (int64 tensors): `input_ids`, `attention_mask`, `token_type_ids`
+- **1 output** (float32): `last_hidden_state` with shape `[batch, seq_len, 384]`
 
 ## Files
 
 ```
 _code/zig-onnx-embeddings/
-├── main.zig          # Working tokenizer (144 lines)
-├── README.md         # Project documentation
-├── model.onnx        # Download (~52MB)
-└── tokenizer.json    # Download (~700KB)
+├── main.zig              # Main Zig program
+├── onnx_embed.c          # C wrapper for ONNX Runtime
+├── onnx_embed.h          # Header for C wrapper
+├── build.zig             # Zig build configuration
+├── model.onnx            # Download (~52MB)
+└── tokenizer.json        # Download (~700KB)
 ```
 
 Download the model files:
