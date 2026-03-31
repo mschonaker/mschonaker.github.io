@@ -280,8 +280,9 @@ a:visited {
 }
 
 .article-content .mermaid {
-  margin: 24px 0;
+  margin: 32px auto !important;
   text-align: center;
+  display: block;
 }
 
 .article-content code {
