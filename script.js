@@ -2,8 +2,6 @@ let postsContainer;
 let posts = [];
 let currentView = null;
 
-mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-
 async function loadPosts() {
   postsContainer = document.getElementById('posts');
   if (!postsContainer) return;
@@ -142,7 +140,9 @@ async function renderArticle(post) {
       </div>
     `;
     try {
-      await mermaid.run({ querySelector: '.mermaid' });
+      if (typeof mermaid !== 'undefined' && document.querySelector('.mermaid')) {
+        await mermaid.run({ querySelector: '.mermaid' });
+      }
       postsContainer.querySelectorAll('pre code').forEach(block => {
         const classes = block.className.split(' ').filter(c => c.startsWith('language-'));
         if (classes.length) {
@@ -191,5 +191,8 @@ function escapeHtml(text) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+  }
   loadPosts();
 });
