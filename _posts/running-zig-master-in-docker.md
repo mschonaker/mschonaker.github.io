@@ -52,9 +52,3 @@ Run it:
 docker run --rm -v $(pwd):/app -w /app ziglings/ziglang zig run hello.zig
 ```
 
-## Why Use Docker?
-
-- No need to build Zig from source
-- Try different versions easily
-- Isolated environment
-- Works on any platform with Docker
