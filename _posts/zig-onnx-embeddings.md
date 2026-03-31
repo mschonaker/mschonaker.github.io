@@ -267,6 +267,26 @@ The MiniLM-L6-v2 model expects:
 - **3 inputs** (int64 tensors): `input_ids`, `attention_mask`, `token_type_ids`
 - **1 output** (float32): `last_hidden_state` with shape `[batch, seq_len, 384]`
 
+### What is ONNX Inference?
+
+[ONNX](https://onnxruntime.ai/) (Open Neural Network eXchange) is a universal format for ML models. An ONNX model is a computation graph that defines how data flows through layers.
+
+**The flow:**
+```
+Token IDs [4] → Embedding Layer → 6 Transformer Layers → [4 × 384]
+                                                           ↓
+                                                    Mean Pooling
+                                                           ↓
+                                                   [384] Embedding
+```
+
+ONNX Runtime executes this graph efficiently on CPU/GPU. It handles:
+- Memory management for inputs/outputs
+- Graph optimization
+- Efficient execution
+
+The C API lets you load a model, feed it tensors, and read the results—no Python needed.
+
 ## Files
 
 ```
