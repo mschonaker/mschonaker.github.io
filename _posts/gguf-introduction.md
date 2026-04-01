@@ -33,10 +33,10 @@ For most use cases, **Q4_K_M** hits the sweet spot between file size and output 
 
 A GGUF file is a self-contained binary package with four sections:
 
-1. **Header** -- Magic bytes ("GGUF"), version number, tensor count, and KV pair count.
-2. **Key-Value Metadata** -- Architecture name, context length, embedding dimensions, tokenizer settings, and more.
-3. **Tensor Descriptors** -- Names, shapes, types, and data offsets for each weight matrix.
-4. **Tensor Data** -- The actual compressed model weights.
+1. **Header** — Magic bytes ("GGUF"), version number, tensor count, and KV pair count.
+2. **Key-Value Metadata** — Architecture name, context length, embedding dimensions, tokenizer settings, and more.
+3. **Tensor Descriptors** — Names, shapes, types, and data offsets for each weight matrix.
+4. **Tensor Data** — The actual compressed model weights.
 
 The format is versioned (currently version 3), with metadata stored as typed key-value pairs that can be extended without breaking backward compatibility.
 
@@ -85,11 +85,11 @@ As quantization techniques improve and hardware becomes faster, GGUF continues t
 
 ### Official Sources
 - [llama.cpp GitHub Repository](https://github.com/ggml-org/llama.cpp)
-- [GGUF File Format Specification](https://github.com/ggml-org/ggml/blob/master/docs/gguf.md) -- Official spec
-- [GGUF Documentation](https://mintlify.com/ggml-org/llama.cpp/concepts/gguf-format) -- Complete format docs
-- [gguf.h Header File](https://github.com/ggml-org/llama.cpp/blob/master/ggml/include/gguf.h) -- Type definitions and API
-- [Georgi Gerganov's Blog](https://ggerganov.com/) -- Author's writings on the project
+- [GGUF File Format Specification](https://github.com/ggml-org/ggml/blob/master/docs/gguf.md) — Official spec
+- [GGUF Documentation](https://mintlify.com/ggml-org/llama.cpp/concepts/gguf-format) — Complete format docs
+- [gguf.h Header File](https://github.com/ggml-org/llama.cpp/blob/master/ggml/include/gguf.h) — Type definitions and API
+- [Georgi Gerganov's Blog](https://ggerganov.com/) — Author's writings on the project
 
 ### Ecosystem
 - [Hugging Face GGUF Models](https://huggingface.co/models?library=gguf)
-- [GGUF-my-repo](https://huggingface.co/spaces/ggml-org/gguf-my-repo) -- Online model converter
+- [GGUF-my-repo](https://huggingface.co/spaces/ggml-org/gguf-my-repo) — Online model converter

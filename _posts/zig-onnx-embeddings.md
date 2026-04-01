@@ -501,9 +501,9 @@ curl -L -o _code/zig-onnx-embeddings/tokenizer.json \
 ## References
 
 ### Model Sources
-- [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) -- Main model page
-- [Xenova/all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2) -- Pre-converted ONNX versions
-- [onnx-models/all-MiniLM-L6-v2-onnx](https://huggingface.co/onnx-models/all-MiniLM-L6-v2-onnx) -- Official ONNX models
+- [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) — Main model page
+- [Xenova/all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2) — Pre-converted ONNX versions
+- [onnx-models/all-MiniLM-L6-v2-onnx](https://huggingface.co/onnx-models/all-MiniLM-L6-v2-onnx) — Official ONNX models
 
 ### Technical Resources
 
@@ -519,9 +519,9 @@ curl -L -o _code/zig-onnx-embeddings/tokenizer.json \
 
 **Tools & Ecosystem:**
 - [Sentence Transformers Library](https://www.sbert.net/)
-- [Transformers.js Space](https://huggingface.co/spaces/xenova/transformers) -- Run models in browser
+- [Transformers.js Space](https://huggingface.co/spaces/xenova/transformers) — Run models in browser
 - [Sentence Transformers Semantic Search Space](https://huggingface.co/spaces/sentence-transformers/Sentence_Transformers_for_semantic_search)
-- [tokenizer.io](https://tokenizer.io/) -- Online tokenizer tool
+- [tokenizer.io](https://tokenizer.io/) — Online tokenizer tool
 
 **Quantization:**
 - [onnxruntime-optimization](https://huggingface.co/philschmid/all-MiniLM-L6-v2-optimum-embeddings)
@@ -533,4 +533,4 @@ curl -L -o _code/zig-onnx-embeddings/tokenizer.json \
 - [MiniLM Model Overview](https://www.youtube.com/watch?v=pmb6cjngbcA)
 
 **Mobile/Embedded:**
-- [Android Sentence Embeddings Library](https://www.reddit.com/r/androiddev/comments/1dpunde/sentenceembeddingsandroid_an_android_library_to/) -- Uses ONNX Runtime
+- [Android Sentence Embeddings Library](https://www.reddit.com/r/androiddev/comments/1dpunde/sentenceembeddingsandroid_an_android_library_to/) — Uses ONNX Runtime
