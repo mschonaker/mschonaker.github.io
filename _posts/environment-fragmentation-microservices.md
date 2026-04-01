@@ -8,7 +8,7 @@ So why can't two teams in the same organization share a staging environment?
 
 The answer is simple: **we consume the production of other teams**. The package on PyPI is someone's production. The npm package is someone's release. The Docker image is someone's deployed artifact.
 
-Everything else—feature branches, unreleased changes, works-in-progress—should be namespaces, not artifacts. Yet in most organizations, dev depends on qa's unreleased code, staging depends on integration's half-baked changes, and the entire pre-production landscape becomes an entangled mess of circular dependencies.
+Everything else—your dev, your qa, your staging—should be namespaces you control, not artifacts you consume. Just like you name your Azure Redis instances "prod-cache", "qa-cache", "dev-cache"—you're consuming Azure's production service but creating your own namespaces. Do the same with other teams: consume their production, create your own namespace.
 
 Jeff Bezos famously mandated that all internal communication happen over email rather than meetings—so information could be shared asynchronously, without synchronization. The same principle applies here: if your lower environments require synchronous coordination to function, you've already lost.
 
@@ -34,7 +34,7 @@ The naive solution is more environments—one per developer—but that's cost-pr
 
 ## The Fix
 
-**Consume production, not works-in-progress.** If teams only depend on released artifacts, environment coupling disappears. The same principle that makes npm and PyPI work internally.
+**Consume production, not other teams' lower environments.** If team A depends on team B's staging, they're coupled. Create your own namespace on their production instead. The same way you use Azure Redis's production service but name your own instances "dev-cache", "qa-cache".
 
 **Use contract testing.** Tools like Pact verify compatibility without needing a shared environment. Consumers verify their assumptions against providers without deploying both to the same place.
 
