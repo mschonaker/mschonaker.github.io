@@ -25,11 +25,13 @@ This is **Environment Fragmentation** - a scaling failure that transforms your m
 
 Environment Fragmentation occurs when lower environments (Dev, QA, Staging) become tightly coupled to each other's state and artifacts. Instead of each environment being independently functional, they form an interconnected web of dependencies that cannot be validated in isolation.
 
-**Artifact Chaining**: A service in Dev depends on unreleased artifacts from another lower environment. When Service B advances, Service A breaks. Teams maintain feature branches across multiple services simultaneously—all pointed at the same volatile environment.
+**Artifact Chaining**: Your User service in Dev depends on unreleased artifacts from Team B's Payment service. When Payment advances, User breaks. In microservices, this scales—your checkout flow touches 6 services, and updating any one makes the entire stack temporarily invalid for testing.
 
-**Environment Drift**: Each environment develops its own personality. Different teams apply patches, manual workarounds, and local configurations. "It works in Staging" becomes a reliable indicator it won't work in Production.
+**Keep your dependency graph acyclic.** Like npm or Maven, your service dependencies should form a tree, not a web. If Service A → B → C → A, you have a cycle—and that's where environment fragmentation bites. Breaking the cycle means one service "owns" its consumers' view of it (the namespace pattern).
 
-**Contention**: Multiple teams share a single Staging environment. Deployment becomes a negotiation. The aggregate velocity of the organization becomes limited by the availability of a single shared resource.
+**Environment Drift**: Each team's "staging" diverges. Team A's notification service has different retry logic in their staging than in production. Team B's auth service has different token expiry. The phrase "it works in Staging" becomes a reliable indicator it won't work in Production.
+
+**Contention**: Your 15 microservices share a single Staging with 5 other teams. The payments team is running load tests while the user team needs to deploy. Deployment becomes a negotiation. The aggregate velocity becomes limited by one shared environment.
 
 **Mocks Lie**: Teams retreat to mocked dependencies. Mocks work—until they don't. Subtle runtime interactions only emerge when the real service is involved. By then, you're in production.
 
