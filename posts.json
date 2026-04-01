@@ -1,5 +1,13 @@
 [
   {
+    "id": "env-fragmentation",
+    "type": "article",
+    "file": "_posts/environment-fragmentation-microservices.md",
+    "timestamp": 1747699200,
+    "summary": "Why your dev/QA/staging environments become a distributed monolith and how to fix it.",
+    "image": "/images/maven-header.png"
+  },
+  {
     "id": "esql001",
     "type": "article",
     "file": "_posts/esql-docker-example.md",
@@ -70,5 +78,10 @@
     "timestamp": 1743206400,
     "summary": "How to build and run the latest Zig compiler from source inside a Docker container.",
     "image": null
+  },
+  {
+    "id": "hello001",
+    "content": "Hello, world! Welcome to my microblog. This is a place for short thoughts, quick notes, and whatever's on my mind.",
+    "timestamp": 1743206400
   }
 ]
