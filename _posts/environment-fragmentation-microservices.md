@@ -1,10 +1,4 @@
----
-layout: post
-title: "Environment Fragmentation Defined"
-date: 2026-03-31
-description: "Why your dev/QA/staging environments become a distributed monolith and how to fix it."
-categories: [microservices, devops, architecture]
----
+# Environment Fragmentation Defined
 
 ![Microservices Environment](/images/maven-header.png)
 
