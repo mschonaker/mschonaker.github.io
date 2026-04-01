@@ -6,6 +6,7 @@
     "timestamp": 1743436800,
     "summary": "Why your dev/QA/staging environments create a distributed monolith and how to fix it."
   },
+  {
     "id": "simd-zig-intro",
     "type": "article",
     "file": "_posts/simd-zig-introduction.md",
