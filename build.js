@@ -48,7 +48,8 @@ const posts = files.map(file => {
     type: 'article',
     file: `${postsDir}/${file}`,
     timestamp: parseDate(frontMatter.date),
-    summary: frontMatter.summary
+    summary: frontMatter.summary,
+    image: frontMatter.image || null
   };
 
   return post;

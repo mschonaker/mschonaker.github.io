@@ -4,69 +4,71 @@
     "type": "article",
     "file": "_posts/esql-docker-example.md",
     "timestamp": 1747699200,
-    "summary": "Running Elasticsearch with SQL support in Docker for quick local development and testing."
+    "summary": "Running Elasticsearch with SQL support in Docker for quick local development and testing.",
+    "image": null
   },
   {
     "id": "hexagonal-spring-boot",
     "type": "article",
     "file": "_posts/hexagonal-architecture-spring-boot.md",
     "timestamp": 1747699200,
-    "summary": "Breaking free from Spring annotations in your core business logic using explicit bean registration."
+    "summary": "Breaking free from Spring annotations in your core business logic using explicit bean registration.",
+    "image": null
   },
   {
     "id": "tailscale001",
     "type": "article",
     "file": "_posts/free-tailscale-iphone-mac.md",
     "timestamp": 1743724800,
-    "summary": "Setting up free Tailscale VPN to connect your iPhone and Mac without paying for a server."
-  },
-  {
-    "id": "env-fragmentation",
-    "type": "article",
-    "file": "_posts/environment-fragmentation-microservices.md",
-    "timestamp": 1743465600,
-    "summary": "Why your dev/QA/staging environments become a distributed monolith and how to fix it."
+    "summary": "Setting up free Tailscale VPN to connect your iPhone and Mac without paying for a server.",
+    "image": null
   },
   {
     "id": "gguf-intro",
     "type": "article",
     "file": "_posts/gguf-introduction.md",
     "timestamp": 1743465600,
-    "summary": "GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware."
+    "summary": "GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware.",
+    "image": "/images/gguf-header.png"
   },
   {
     "id": "java-zig-ffi",
     "type": "article",
     "file": "_posts/java-zig-ffi.md",
     "timestamp": 1743465600,
-    "summary": "Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code."
+    "summary": "Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code.",
+    "image": null
   },
   {
     "id": "simd-zig-intro",
     "type": "article",
     "file": "_posts/simd-zig-introduction.md",
     "timestamp": 1743465600,
-    "summary": "Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing."
+    "summary": "Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing.",
+    "image": null
   },
   {
     "id": "zig-onnx-embeddings",
     "type": "article",
     "file": "_posts/zig-onnx-embeddings.md",
     "timestamp": 1743465600,
-    "summary": "Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python."
+    "summary": "Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python.",
+    "image": null
   },
   {
     "id": "maven001",
     "type": "article",
     "file": "_posts/maven-release-lifecycle.md",
     "timestamp": 1743292800,
-    "summary": "Understanding Maven's release process and how to properly version your Java projects."
+    "summary": "Understanding Maven's release process and how to properly version your Java projects.",
+    "image": null
   },
   {
     "id": "zig001",
     "type": "article",
     "file": "_posts/running-zig-master-in-docker.md",
     "timestamp": 1743206400,
-    "summary": "How to build and run the latest Zig compiler from source inside a Docker container."
+    "summary": "How to build and run the latest Zig compiler from source inside a Docker container.",
+    "image": null
   }
 ]

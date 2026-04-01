@@ -141,6 +141,7 @@ async function renderArticle(post) {
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
         <div class="article-content">
+          ${post.image ? `<img src="${escapeHtml(post.image)}" class="article-hero" alt="${escapeHtml(title)}">` : ''}
           <h1>${escapeHtml(title)}</h1>
           <div class="article-date">${formatDate(post.timestamp)}</div>
           ${html}
