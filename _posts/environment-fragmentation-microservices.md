@@ -6,8 +6,6 @@ description: "Why your dev/QA/staging environments become a distributed monolith
 categories: [microservices, devops, architecture]
 ---
 
----
-
 ![Microservices Environment](/images/maven-header.png)
 
 You pip install a library from a stranger on the internet. It works. You npm install a package from a maintainer you've never met. It works. You docker pull an image from a random GitHub repo. It works.
