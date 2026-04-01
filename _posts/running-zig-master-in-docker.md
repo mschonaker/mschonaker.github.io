@@ -1,3 +1,10 @@
+---
+id: zig001
+title: Running Zig Master in Docker
+summary: How to build and run the latest Zig compiler from source inside a Docker container.
+date: 2025-03-29
+---
+
 # Running Zig Master in Docker
 
 ![Zig header](/images/zig-header.png)

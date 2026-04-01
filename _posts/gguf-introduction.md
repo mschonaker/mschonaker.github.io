@@ -1,3 +1,10 @@
+---
+id: gguf-intro
+title: An Introduction to GGUF
+summary: GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware.
+date: 2025-04-01
+---
+
 # An Introduction to GGUF: The Format Bringing LLMs to Everyone
 
 GGUF (GPT-Generated Unified Format) is a binary file format designed specifically for storing and running quantized large language models (LLMs) efficiently on consumer hardware. Created by Georgi Gerganov as part of the [llama.cpp](https://github.com/ggml-org/llama.cpp) project, GGUF has become the de facto standard for running AI models locally---on laptops, desktops, and even smartphones.

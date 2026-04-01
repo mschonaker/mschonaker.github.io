@@ -1,77 +1,72 @@
 [
   {
-    "id": "env-fragmentation",
+    "id": "esql001",
     "type": "article",
-    "file": "_posts/environment-fragmentation-microservices.md",
-    "timestamp": 1743436800,
-    "summary": "Why your dev/QA/staging environments become a distributed monolith and how to fix it."
-  },
-  {
-    "id": "simd-zig-intro",
-    "type": "article",
-    "file": "_posts/simd-zig-introduction.md",
-    "timestamp": 1743436800,
-    "summary": "Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing."
-  },
-  {
-    "id": "java-zig-ffi",
-    "type": "article",
-    "file": "_posts/java-zig-ffi.md",
-    "timestamp": 1743436800,
-    "summary": "Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code."
-  },
-  {
-    "id": "zig-onnx-embeddings",
-    "type": "article",
-    "file": "_posts/zig-onnx-embeddings.md",
-    "timestamp": 1743464400,
-    "summary": "Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python."
-  },
-  {
-    "id": "gguf-intro",
-    "type": "article",
-    "file": "_posts/gguf-introduction.md",
-    "timestamp": 1743460800,
-    "summary": "GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware."
+    "file": "_posts/esql-docker-example.md",
+    "timestamp": 1747699200,
+    "summary": "Running Elasticsearch with SQL support in Docker for quick local development and testing."
   },
   {
     "id": "hexagonal-spring-boot",
     "type": "article",
     "file": "_posts/hexagonal-architecture-spring-boot.md",
-    "timestamp": 1747692283,
+    "timestamp": 1747699200,
     "summary": "Breaking free from Spring annotations in your core business logic using explicit bean registration."
-  },
-  {
-    "id": "esql001",
-    "type": "article",
-    "file": "_posts/esql-docker-example.md",
-    "timestamp": 1747692283,
-    "summary": "Running Elasticsearch with SQL support in Docker for quick local development and testing."
   },
   {
     "id": "tailscale001",
     "type": "article",
     "file": "_posts/free-tailscale-iphone-mac.md",
-    "timestamp": 1743717883,
+    "timestamp": 1743724800,
     "summary": "Setting up free Tailscale VPN to connect your iPhone and Mac without paying for a server."
   },
   {
-    "id": "zig001",
+    "id": "env-fragmentation",
     "type": "article",
-    "file": "_posts/running-zig-master-in-docker.md",
-    "timestamp": 1743217200,
-    "summary": "How to build and run the latest Zig compiler from source inside a Docker container."
+    "file": "_posts/environment-fragmentation-microservices.md",
+    "timestamp": 1743465600,
+    "summary": "Why your dev/QA/staging environments become a distributed monolith and how to fix it."
+  },
+  {
+    "id": "gguf-intro",
+    "type": "article",
+    "file": "_posts/gguf-introduction.md",
+    "timestamp": 1743465600,
+    "summary": "GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware."
+  },
+  {
+    "id": "java-zig-ffi",
+    "type": "article",
+    "file": "_posts/java-zig-ffi.md",
+    "timestamp": 1743465600,
+    "summary": "Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code."
+  },
+  {
+    "id": "simd-zig-intro",
+    "type": "article",
+    "file": "_posts/simd-zig-introduction.md",
+    "timestamp": 1743465600,
+    "summary": "Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing."
+  },
+  {
+    "id": "zig-onnx-embeddings",
+    "type": "article",
+    "file": "_posts/zig-onnx-embeddings.md",
+    "timestamp": 1743465600,
+    "summary": "Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python."
   },
   {
     "id": "maven001",
     "type": "article",
     "file": "_posts/maven-release-lifecycle.md",
-    "timestamp": 1743273600,
+    "timestamp": 1743292800,
     "summary": "Understanding Maven's release process and how to properly version your Java projects."
   },
   {
-    "id": "hello001",
-    "content": "Hello, world! Welcome to my microblog. This is a place for short thoughts, quick notes, and whatever's on my mind.",
-    "timestamp": 1743273600
+    "id": "zig001",
+    "type": "article",
+    "file": "_posts/running-zig-master-in-docker.md",
+    "timestamp": 1743206400,
+    "summary": "How to build and run the latest Zig compiler from source inside a Docker container."
   }
 ]

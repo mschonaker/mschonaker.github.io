@@ -1,3 +1,10 @@
+---
+id: esql001
+title: Getting Started with ES|QL in Docker
+summary: Running Elasticsearch with SQL support in Docker for quick local development and testing.
+date: 2025-05-20
+---
+
 # Getting Started with ES|QL in Docker
 
 ES|QL (Elasticsearch Query Language) is a pipe-based language that lets you query and transform data in Elasticsearch. Here's a minimalistic example with students and courses.

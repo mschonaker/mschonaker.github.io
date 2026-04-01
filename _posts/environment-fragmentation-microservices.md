@@ -1,3 +1,10 @@
+---
+id: env-fragmentation
+title: Environment Fragmentation Defined
+summary: Why your dev/QA/staging environments become a distributed monolith and how to fix it.
+date: 2025-04-01
+---
+
 # Environment Fragmentation Defined
 
 ![Microservices Environment](/images/maven-header.png)

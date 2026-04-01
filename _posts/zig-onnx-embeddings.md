@@ -1,3 +1,10 @@
+---
+id: zig-onnx-embeddings
+title: Computing Embeddings in Pure Zig Without Python
+summary: Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python.
+date: 2025-04-01
+---
+
 # Computing Embeddings in Pure Zig Without Python
 
 For a recent project, I needed to compute sentence embeddings without relying on Python. After some research, I found that MiniLM-L6-v2 is available as a pre-converted ONNX model, and ONNX Runtime has a C API that can be called from any language.

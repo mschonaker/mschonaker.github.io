@@ -1,3 +1,10 @@
+---
+id: hexagonal-spring-boot
+title: Hexagonal Architecture in Spring Boot
+summary: Breaking free from Spring annotations in your core business logic using explicit bean registration.
+date: 2025-05-20
+---
+
 # Hexagonal Architecture in Spring Boot: Breaking Free from Annotations
 
 ![Hexagonal Architecture header](/images/hexagonal-architecture.png)

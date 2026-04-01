@@ -1,3 +1,10 @@
+---
+id: simd-zig-intro
+title: Getting Started with SIMD in Zig
+summary: Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing.
+date: 2025-04-01
+---
+
 # Getting Started with SIMD in Zig
 
 SIMD (Single Instruction, Multiple Data) lets you perform the same operation on multiple data points simultaneously. Instead of adding two numbers one at a time, you can add eight at once. This is perfect for image processing, numerical computing, and string operations.
