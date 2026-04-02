@@ -5,7 +5,7 @@
     "file": "_posts/environment-fragmentation-microservices.md",
     "timestamp": 1747699200,
     "summary": "Why your dev/QA/staging environments become a distributed monolith and how to fix it.",
-    "image": "/images/maven-header.png"
+    "image": null
   },
   {
     "id": "esql001",
