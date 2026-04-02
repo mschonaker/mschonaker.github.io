@@ -1,7 +1,3 @@
-let postsContainer;
-let posts = [];
-let currentView = null;
-
 async function loadPosts() {
   postsContainer = document.getElementById('posts');
   if (!postsContainer) return;
@@ -59,19 +55,11 @@ function clearHash() {
 }
 
 async function renderPosts() {
-  // Sort posts by date descending (newest first)
   const sorted = [...posts].sort((a, b) => b.timestamp - a.timestamp);
   
   const hashId = getHashParams();
   if (hashId) {
     const post = posts.find(p => p.id === hashId);
-    if (post && post.type === 'article') {
-      currentView = hashId;
-      await renderArticle(post);
-      return;
-    }
-  } else if (currentView) {
-    const post = posts.find(p => p.id === currentView);
     if (post && post.type === 'article') {
       await renderArticle(post);
       return;
@@ -109,20 +97,10 @@ async function renderPosts() {
         `;
       }
     }
-    const isWelcome = post.id === 'hello001';
-    return `
-      <div class="post" id="post-${post.id}">
-        <div class="post-content">${escapeHtml(post.content)}</div>
-        ${!isWelcome ? `<div class="post-meta">${formatDate(post.timestamp)}</div>` : ''}
-      </div>
-    `;
+    return '';
   }));
   
-  const welcomePost = articleLinks.find((_, i) => sorted[i]?.id === 'hello001');
-  const otherPosts = articleLinks.filter((_, i) => sorted[i]?.id !== 'hello001');
-  const orderedPosts = [...otherPosts, welcomePost].filter(Boolean);
-  
-  postsContainer.innerHTML = orderedPosts.join('');
+  postsContainer.innerHTML = articleLinks.join('');
 }
 
 async function renderArticle(post) {
