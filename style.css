@@ -87,10 +87,7 @@ a:visited {
 
 .welcome {
   margin-bottom: 30px;
-  padding: 20px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border-radius: 12px;
-  border: 1px solid #0f3460;
+  color: #8b949e;
 }
 
 .post-content {
