@@ -72,14 +72,6 @@
     "image": null
   },
   {
-    "id": "hello001",
-    "type": "article",
-    "file": "_posts/hello-world.md",
-    "timestamp": 1743206400,
-    "summary": "Welcome to my microblog. This is a place for short thoughts, quick notes, and whatever's on my mind.",
-    "image": null
-  },
-  {
     "id": "zig001",
     "type": "article",
     "file": "_posts/running-zig-master-in-docker.md",
