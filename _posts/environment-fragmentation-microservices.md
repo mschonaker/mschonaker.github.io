@@ -15,30 +15,42 @@ So why can't two teams in the same organization share a staging environment?
 
 ---
 
-**Artifact Chaining**: Your User service in Dev depends on unreleased (non-production) artifacts from Team B's Payment service. When Payment advances, User breaks. In microservices, your checkout flow touches 6 services—updating any one makes the entire stack temporarily invalid for testing.
+## Artifact Chaining
 
-**The Fix**: Consume production, not other teams' lower environments. Create your own namespace on their production. Just like you use Azure Redis's production service but name your own instances "dev-cache", "qa-cache".
+Here's how it usually starts: your User service in Dev depends on Team B's Payment service—but the unreleased version, not the one running in production. When Payment ships their update, User breaks. Now you're in a Mexican standoff: Payment can't deploy because User breaks, and User can't update because Payment is mid-sprint.
 
----
+In a microservices architecture, your checkout flow might touch six services. Updating any one of them makes the entire stack temporarily invalid for testing. You've built a distributed monolith.
 
-**Shared Fan-in**: Your services B and C both depend on D (MySQL, Redis, Kafka). Upgrading D requires upgrading both B and C simultaneously - impossible to coordinate. One team's upgrade blocks everyone else.
-
-**The Fix**: One service "owns" its view of the shared dependency. Like B has MySQL-1, C has MySQL-2. Each team's dependency is isolated - no coordination required. Use strict SemVer so non-breaking upgrades don't block anyone.
+**The fix is surprisingly simple**: consume production, not other teams' lower environments. Create your own namespace on their production cluster. Think of how you use Azure Redis—you're using Azure's production service, but you've named your instances "dev-cache" and "qa-cache". Same idea. Each team drinks from production, but from their own cup.
 
 ---
 
-**Dependency Cycles**: If Service A → B → C → A, you have a cycle. That's where environment fragmentation bites.
+## Shared Fan-in
 
-**The Fix**: Keep your dependency graph acyclic. Like npm or Maven, your service dependencies should form a tree, not a web. One service "owns" its consumers' view of it.
+Now picture this: your services B and C both depend on service D (maybe a MySQL instance, a Redis cache, or a Kafka topic). When you want to upgrade D, you suddenly need to upgrade B and C simultaneously. One team's upgrade blocks two other teams, and those teams are busy with their own priorities.
 
----
+Sound familiar? This is the "shared database" anti-pattern wearing a microservices costume.
 
-**Environment Drift**: Each team's "staging" diverges. Team A's notification service has different retry logic. Team B's auth service has different token expiry. "It works in Staging" becomes a reliable indicator it won't work in Production.
-
-**The Fix**: Use contract testing (Pact) to verify compatibility without shared environments.
+**The fix**: one service "owns" its view of the shared dependency. Service B gets its own MySQL-1 instance. Service C gets its own MySQL-2 instance. Each team's dependency is completely isolated—zero coordination required. The key is strict SemVer: when non-breaking upgrades don't block anyone, upgrading becomes frictionless.
 
 ---
 
-Jeff Bezos mandated that internal communication happen over email rather than meetings—so information could be shared asynchronously, without synchronization. The same principle applies here: if your lower environments require synchronous coordination to function, you've already lost.
+## Dependency Cycles
+
+Imagine a world where Service A calls B, B calls C, and C calls A. Congratulations, you've invented the environment fragmentation party game where nobody wins. Cycles create tight coupling across time: A can't upgrade without understanding C, and C can't refactor without breaking A.
+
+**The fix**: keep your dependency graph acyclic. Your service dependencies should form a tree, not a web. This isn't just about clean architecture—it's about organizational independence. One service "owns" its consumers' view of it, and everyone else treats it as a stable, versioned contract.
+
+---
+
+## Environment Drift
+
+Here's the quiet killer: over time, each team's "staging" environment diverges from production. Team A's notification service has different retry logic. Team B's auth service has different token expiry settings. Slowly, almost invisibly, "it works in staging" becomes a reliable indicator that it *won't* work in production.
+
+**The fix**: contract testing. Tools like Pact let you verify that your services speak the same language—without ever sharing an environment. You test your side of the contract, they test theirs, and you both sleep better at night.
+
+---
+
+Jeff Bezos mandated that internal communication happen over email rather than meetings—so information could flow asynchronously, without forcing people to synchronize their calendars. The same principle applies to environments: if your lower environments require synchronous coordination to function, you've already lost.
 
 Your production microservices are independently deployable. Your lower environments should be too.
