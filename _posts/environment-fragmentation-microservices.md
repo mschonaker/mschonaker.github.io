@@ -31,7 +31,11 @@ Now picture this: your services B and C both depend on service D (maybe a MySQL 
 
 Sound familiar? This is the "shared database" anti-pattern wearing a microservices costume.
 
-**The fix**: one service "owns" its view of the shared dependency. Service B gets its own MySQL-1 instance. Service C gets its own MySQL-2 instance. Each team's dependency is completely isolated—zero coordination required. The key is strict SemVer: when non-breaking upgrades don't block anyone, upgrading becomes frictionless.
+**The fix**: one service "owns" its view of the shared dependency. Service B gets its own MySQL-1 instance. Service C gets its own MySQL-2 instance. Each team's dependency is completely isolated—zero coordination required.
+
+### Major versions = new instances
+
+Strict SemVer is what makes this work at scale. When Service B needs a schema change that breaks backward compatibility, they don't coordinate with Service C—they deploy MySQL-2. Service C keeps running MySQL-1, unaffected. Now both teams are on independent major versions: B on MySQL-2, C on MySQL-1. Neither team's breaking change blocks the other. Patches and minors flow frictionlessly; major bumps mean spinning up a new instance. The dependency graph stays acyclic because there's no shared state to coordinate around.
 
 ---
 
