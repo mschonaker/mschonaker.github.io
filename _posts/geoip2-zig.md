@@ -1,12 +1,12 @@
 ---
 id: geoip2-zig
-title: Building a GeoIP2 Parser from Scratch in Zig
+title: Building a GeoIP2 Service from Scratch in Zig
 summary: A deep dive into implementing binary protocol parsing, Patricia trie traversal, and async I/O in Zig—no external dependencies.
 date: 2026-04-04
 image: /images/geoip2-zig-header.png
 ---
 
-# Building a GeoIP2 Parser from Scratch in Zig
+# Building a GeoIP2 Service from Scratch in Zig
 
 I just released [GeoIP2-zig](https://github.com/mschonaker/GeoIP2-zig), a hand-rolled implementation of MaxMind's GeoIP2 binary format in Zig. No C bindings, no wrappers—just Zig's standard library and a 40MB embedded database.
 
