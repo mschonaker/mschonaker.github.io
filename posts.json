@@ -1,9 +1,17 @@
 [
   {
+    "id": "oidc-agent-identity",
+    "type": "article",
+    "file": "_posts/oidc-agent-identity.md",
+    "timestamp": 1775520000,
+    "summary": "\"How OpenID Connect is being extended to authenticate, authorize, and delegate credentials for autonomous AI agents—and what a real credential exchange looks like.\"",
+    "image": "/images/oidc-agent-identity-header.png"
+  },
+  {
     "id": "geoip2-zig",
     "type": "article",
     "file": "_posts/geoip2-zig.md",
-    "timestamp": 1775348423,
+    "timestamp": 1775260800,
     "summary": "A deep dive into implementing binary protocol parsing, Patricia trie traversal, and async I/O in Zig—no external dependencies.",
     "image": "/images/geoip2-zig-header.png"
   },
