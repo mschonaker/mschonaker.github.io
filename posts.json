@@ -1,5 +1,13 @@
 [
   {
+    "id": "simd-tokenizer-poc",
+    "type": "article",
+    "file": "_posts/simd-tokenizer-publication.md",
+    "timestamp": 1775952000,
+    "summary": "A proof-of-concept streaming tokenizer that processes arbitrarily large inputs using just 9KB of memory, achieving 5x speedup over bash baseline.",
+    "image": null
+  },
+  {
     "id": "oidc-agent-identity",
     "type": "article",
     "file": "_posts/oidc-agent-identity.md",
