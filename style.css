@@ -416,3 +416,37 @@ pre code {
   border-radius: 12px;
   margin-bottom: 24px;
 }
+
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  background: #16213e;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.article-content th,
+.article-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #0f3460;
+}
+
+.article-content th {
+  background: #1a2d50;
+  color: #58a6ff;
+  font-weight: 600;
+}
+
+.article-content td {
+  color: #c0c0c0;
+}
+
+.article-content tr:last-child td {
+  border-bottom: none;
+}
+
+.article-content tr:hover td {
+  background: #1a2d50;
+}
