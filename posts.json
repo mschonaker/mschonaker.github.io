@@ -1,5 +1,13 @@
 [
   {
+    "id": "graalvm-quarkus-hello",
+    "type": "article",
+    "file": "_posts/graalvm-quarkus-docker-hello.md",
+    "timestamp": 1784246400,
+    "summary": "Build a native Java microservice using GraalVM and Quarkus with a multi-stage Dockerfile — no local GraalVM installation required.",
+    "image": "/images/graalvm-quarkus-header.png"
+  },
+  {
     "id": "open-knowledge-format",
     "type": "article",
     "file": "_posts/open-knowledge-format.md",
