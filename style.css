@@ -420,33 +420,33 @@ pre code {
 .article-content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 16px 0;
-  background: #16213e;
+  margin: 24px 0;
+  background: #0d1929;
   border-radius: 8px;
   overflow: hidden;
+  border: 1px solid #1a3050;
 }
 
 .article-content th,
 .article-content td {
-  padding: 12px 16px;
+  padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid #0f3460;
 }
 
 .article-content th {
-  background: #1a2d50;
-  color: #58a6ff;
+  background: #1a3050;
+  color: #79c0ff;
   font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .article-content td {
-  color: #c0c0c0;
-}
-
-.article-content tr:last-child td {
-  border-bottom: none;
+  color: #c9d1d9;
+  border-top: 1px solid #1a3050;
 }
 
 .article-content tr:hover td {
-  background: #1a2d50;
+  background: #112240;
 }
