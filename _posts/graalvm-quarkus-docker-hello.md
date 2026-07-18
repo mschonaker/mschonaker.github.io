@@ -8,8 +8,6 @@ image: /images/graalvm-quarkus-header.png
 
 # Hello World with GraalVM, Quarkus, Maven, and Docker
 
-![GraalVM and Quarkus header](/images/graalvm-quarkus-header.png)
-
 Quarkus is a Kubernetes-native Java framework, and GraalVM compiles Java ahead-of-time into native executables that start in milliseconds. Together they make Java feel like a scripting language — instant startup, tiny memory footprint.
 
 This guide walks through creating a Hello World REST endpoint with Quarkus and Maven, then packaging it as a native Docker image using GraalVM in a multi-stage build. You don't need GraalVM installed locally; everything runs in containers.
