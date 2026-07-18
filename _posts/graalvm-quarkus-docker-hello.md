@@ -179,7 +179,7 @@ Response:
 Hello from Quarkus REST
 ```
 
-## Why This Matters
+## Takeaways
 
 Native compilation with GraalVM changes the character of Java applications:
 

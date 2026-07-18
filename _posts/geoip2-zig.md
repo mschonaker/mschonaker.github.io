@@ -87,7 +87,7 @@ src/
 │   └── metadata.zig     # database metadata
 ```
 
-## Why This Matters
+## Takeaways
 
 The code demonstrates how to decode a real binary protocol byte-by-byte. The MMDB format isn't a toy—it's a production format used by Cloudflare, Fastly, and others for geo-blocking, content localization, and security analytics.
 

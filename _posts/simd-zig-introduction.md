@@ -40,7 +40,7 @@ Result: { 6, 8, 10, 12 }
 
 The `@Vector(N, T)` type represents a vector of N elements of type T. The `+` operator works element-wise automatically.
 
-## Why This Matters
+## Takeaways
 
 Let's compare scalar vs SIMD performance with a real workload: summing a large array of f64 values.
 
