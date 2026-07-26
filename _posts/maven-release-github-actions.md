@@ -3,7 +3,7 @@ id: maven002
 title: Automating Maven Releases with GitHub Actions
 summary: Automate the release process from Understanding Maven's Release Lifecycle — deploy SNAPSHOTs on every push and cut releases with a single button click.
 image: /images/maven-release-automation.png
-date: 2026-07-26
+date: 2026-07-25
 ---
 
 # Automating Maven Releases with GitHub Actions
