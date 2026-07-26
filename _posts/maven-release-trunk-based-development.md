@@ -1,17 +1,24 @@
 ---
 id: maven003
 title: Trunk-Based Maven Releases with GitHub Actions
-summary: Extend the automation from article 002 with a trunk-based branching model — major/minor releases from main, patch releases from release branches, all automated.
+summary: Extend the automation from Automating Maven Releases with GitHub Actions with a trunk-based branching model — major/minor releases from main, patch releases from release branches, all automated.
 date: 2026-07-26
 ---
 
 # Trunk-Based Maven Releases with GitHub Actions
 
-In articles [001](/article/maven001) and [002](/article/maven002), we set up Maven releases from a single branch. Every push to main deployed a SNAPSHOT, and a manual workflow cut a release from main. Simple and effective.
+![Trunk-based development header](/images/maven-trunk-based-development.png)
 
-But what happens after `v1.0.0` is released and you need to ship a hotfix for a bug in production while `main` has already moved on to `v1.1.0-SNAPSHOT`? You can't release `main` — it contains changes that aren't ready. You need a **patch release** from the `v1.0.0` line.
+This is the third article in the Maven release trilogy. In [Understanding Maven's Release Lifecycle](/#article/maven001), we learned how `mvn release:prepare release:perform` works. In [Automating Maven Releases with GitHub Actions](/#article/maven002), we wrapped those commands in CI/CD workflows. Now we extend that automation to support a proper branching model.
 
-This article introduces **trunk-based development** with Maven: major and minor releases come from `main`, patch releases come from `releases-X.Y.x` branches. Cherry-pick the fix to the release branch, run the patch workflow, and ship. No merges, no branching chaos.
+Trunk-based development (TBD) is a branching strategy where `main` is the single source of truth. All development happens on short-lived feature branches that integrate into `main` frequently — daily or even multiple times per day. Releases are cut from `main` for major and minor versions. Patch releases happen on dedicated release branches created from the release tag, avoiding the need to stabilize `main` before shipping a hotfix.
+
+The key rules in our model:
+- **Major and minor releases** come from `main`. After release, `main` advances to the next minor snapshot.
+- **Patch releases** happen on `releases-X.Y.x` branches. Only cherry-picks from `main` go here — no merges.
+- **Release branches** are created automatically by the main release workflow, pre-configured for the next patch version.
+
+This gives you the flexibility of release branches without sacrificing the simplicity of trunk-based development.
 
 ## The Branching Model
 
@@ -29,7 +36,7 @@ After releasing `v1.1.0` from main:
 
 ### 1. SNAPSHOT Deploy
 
-Identical to article 002, but the branch filter widens to include release branches:
+Identical to [Automating Maven Releases with GitHub Actions](/#article/maven002), but the branch filter widens to include release branches:
 
 ```yaml
 name: SNAPSHOT Deploy
@@ -254,3 +261,8 @@ The three workflows implement a complete trunk-based Maven release pipeline:
 - **Main** handles major and minor releases. After each release, a release branch is created and main advances to the next minor version.
 - **Release branches** handle only patches. Cherry-pick fixes from main, run the patch workflow, ship the fix without deploying unfinished work.
 - **Both branches** get automatic SNAPSHOT deployments on every push, so the latest version is always available for testing.
+
+## See Also
+
+- [Understanding Maven's Release Lifecycle](/#article/maven001) — Maven's release process and GitHub Packages setup
+- [Automating Maven Releases with GitHub Actions](/#article/maven002) — CI/CD workflows for SNAPSHOT and release deployment

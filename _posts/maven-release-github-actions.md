@@ -1,13 +1,15 @@
 ---
 id: maven002
 title: Automating Maven Releases with GitHub Actions
-summary: Automate the release process from article 001 — deploy SNAPSHOTs on every push and cut releases with a single button click.
+summary: Automate the release process from Understanding Maven's Release Lifecycle — deploy SNAPSHOTs on every push and cut releases with a single button click.
 date: 2026-07-26
 ---
 
 # Automating Maven Releases with GitHub Actions
 
-In the [previous article](/article/maven001), we ran `mvn deploy` and `mvn release:prepare release:perform` from a terminal. That works, but it's manual. Every push to main should deploy a fresh SNAPSHOT, and cutting a release should be a button click — not a sequence of commands you hope you remember correctly.
+![Maven automation header](/images/maven-release-automation.png)
+
+In [Understanding Maven's Release Lifecycle](/#article/maven001), we ran `mvn deploy` and `mvn release:prepare release:perform` from a terminal. That works, but it's manual. Every push to main should deploy a fresh SNAPSHOT, and cutting a release should be a button click — not a sequence of commands you hope you remember correctly.
 
 Let's automate both with GitHub Actions.
 
@@ -20,22 +22,22 @@ Two workflows in `.github/workflows/`:
 
 ## Prerequisites
 
-You need the setup from article 001:
+You need the setup from [Understanding Maven's Release Lifecycle](/#article/maven001):
 - A `pom.xml` with `<distributionManagement>` pointing to `https://maven.pkg.github.com/OWNER/REPO`.
 - A `<scm>` section pointing to your repo.
 - A GitHub personal access token with `repo` and `write:packages` scopes.
 
-The project we'll use is the same `maven-release-hello` from article 001.
+The project we'll use is the same `maven-release-hello` from [Understanding Maven's Release Lifecycle](/#article/maven001).
 
 ### SCM URLs: HTTPS vs SSH
 
-Article 001 showed SSH URLs (`scm:git:git@github.com:...`). Those work fine locally. But GitHub Actions needs HTTPS URLs because `actions/checkout` authenticates via token, not SSH key. The release plugin uses these URLs to push tags and commits.
+[Understanding Maven's Release Lifecycle](/#article/maven001) showed SSH URLs (`scm:git:git@github.com:...`). Those work fine locally. But GitHub Actions needs HTTPS URLs because `actions/checkout` authenticates via token, not SSH key. The release plugin uses these URLs to push tags and commits.
 
 You have two options:
 1. Change your POM to HTTPS URLs (works everywhere, both local and CI)
 2. Keep SSH in the POM and override via `-DconnectionUrl` in the workflow (shown below)
 
-This article uses option 2 — the workflow overrides take precedence, so your POM stays unchanged from article 001.
+This article uses option 2 — the workflow overrides take precedence, so your POM stays unchanged from the previous article.
 
 ## Workflow 1: SNAPSHOT Deploy
 
@@ -148,7 +150,7 @@ All without touching a terminal.
 
 If you want to verify this end-to-end (the way an LLM or a CI pipeline would), here are the exact steps:
 
-1. **Create the test project** from article 001 — same `pom.xml` with `groupId com.example`, `artifactId maven-release-hello`, `version 1.0.0-SNAPSHOT`, distribution management pointing to `https://maven.pkg.github.com/YOUR_USER/maven-release-test`.
+1. **Create the test project** from [Understanding Maven's Release Lifecycle](/#article/maven001) — same `pom.xml` with `groupId com.example`, `artifactId maven-release-hello`, `version 1.0.0-SNAPSHOT`, distribution management pointing to `https://maven.pkg.github.com/YOUR_USER/maven-release-test`.
 
 2. **Create a private GitHub repo** called `maven-release-test`:
    ```bash
@@ -233,4 +235,9 @@ The workflows use `actions/setup-java` to generate `settings.xml` on the fly. No
 | SNAPSHOT deploy | `mvn deploy` | Push to `main` |
 | Release | `mvn release:prepare release:perform` | Manual (`workflow_dispatch`) |
 
-The two workflows replace the manual commands from article 001. Every push publishes a SNAPSHOT. Every release is a button click away.
+The two workflows replace the manual commands from [Understanding Maven's Release Lifecycle](/#article/maven001). Every push publishes a SNAPSHOT. Every release is a button click away.
+
+## See Also
+
+- [Understanding Maven's Release Lifecycle](/#article/maven001) — Maven's release process and GitHub Packages setup
+- [Trunk-Based Maven Releases with GitHub Actions](/#article/maven003) — Extending automation with release branches for patch releases

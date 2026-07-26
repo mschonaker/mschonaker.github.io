@@ -71,3 +71,8 @@ Add the dependency:
 ```
 
 Use `mvn -U` to force update SNAPSHOT dependencies during development.
+
+## See Also
+
+- [Automating Maven Releases with GitHub Actions](/#article/maven002) — CI/CD workflows that automate SNAPSHOT deploys and releases
+- [Trunk-Based Maven Releases with GitHub Actions](/#article/maven003) — Extending automation with release branches for patch releases
