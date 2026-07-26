@@ -8,8 +8,6 @@ date: 2026-07-26
 
 # Trunk-Based Maven Releases with GitHub Actions
 
-![Trunk-based development header](/images/maven-trunk-based-development.png)
-
 This is the third article in the Maven release trilogy. In [Understanding Maven's Release Lifecycle](/#article/maven001), we learned how `mvn release:prepare release:perform` works. In [Automating Maven Releases with GitHub Actions](/#article/maven002), we wrapped those commands in CI/CD workflows. Now we extend that automation to support a proper branching model.
 
 Trunk-based development (TBD) is a branching strategy where `main` is the single source of truth. All development happens on short-lived feature branches that integrate into `main` frequently — daily or even multiple times per day. Releases are cut from `main` for major and minor versions. Patch releases happen on dedicated release branches created from the release tag, avoiding the need to stabilize `main` before shipping a hotfix.

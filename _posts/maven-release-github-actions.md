@@ -8,8 +8,6 @@ date: 2026-07-26
 
 # Automating Maven Releases with GitHub Actions
 
-![Maven automation header](/images/maven-release-automation.png)
-
 In [Understanding Maven's Release Lifecycle](/#article/maven001), we ran `mvn deploy` and `mvn release:prepare release:perform` from a terminal. That works, but it's manual. Every push to main should deploy a fresh SNAPSHOT, and cutting a release should be a button click — not a sequence of commands you hope you remember correctly.
 
 Let's automate both with GitHub Actions.
