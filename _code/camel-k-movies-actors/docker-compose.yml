@@ -1,0 +1,38 @@
+services:
+  h2-movies:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: h2-movies
+    ports:
+      - "9092:9092"
+      - "8082:8082"
+    environment:
+      INIT_SQL: /opt/init/movies.sql
+      DB_NAME: movies
+    volumes:
+      - ./data/movies.sql:/opt/init/movies.sql
+
+  h2-actors:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: h2-actors
+    ports:
+      - "9093:9092"
+      - "8083:8082"
+    environment:
+      INIT_SQL: /opt/init/actors.sql
+      DB_NAME: actors
+    volumes:
+      - ./data/actors.sql:/opt/init/actors.sql
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.5
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m

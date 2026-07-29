@@ -1,0 +1,116 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: movies-actors-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+  annotations:
+    camel.apache.org/provider: "Apache Software Foundation"
+    camel.apache.org/kamelet.group: "Database"
+    camel.apache.org/kamelet.namespace: "Database"
+    camel.apache.org/kamelet.icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgdmlld0JveD0iMCAwIDUwIDUwIj48cGF0aCBkPSJNMjUgMkMxMiAzIDIgMTIgMiAyNXMxMCAyMyAyMyAyMyAyMy0xMCAyMy0yM1MzOCAzIDI1IDJ6bTAgNDVjLTEyLjEgMC0yMi05LjktMjItMjJzOS45LTIyIDIyLTIyIDIyIDkuOSAyMiAyMi05LjkgMjItMjIgMjJ6IiBmaWxsPSIjNDI4NWY0Ii8+PHBhdGggZD0iTTE1IDMwaDEwdjEwSDE1em0xMC0xMGgxMHYxMEgyNXoiIGZpbGw9IiM0Mjg1ZjQiLz48L3N2Zz4="
+spec:
+  definition:
+    title: "Movies Actors Source"
+    description: |-
+      Reads movies and actors from two separate H2 databases and produces
+      joined JSON documents containing movie details with embedded actors.
+    required:
+      - moviesUrl
+      - actorsUrl
+    type: object
+    properties:
+      period:
+        title: Period
+        description: The interval between polls in milliseconds
+        type: integer
+        default: 60000
+      moviesUrl:
+        title: Movies Database URL
+        description: JDBC URL for the movies H2 database
+        type: string
+        example: jdbc:h2:tcp://h2-movies:9092/movies
+      moviesUser:
+        title: Movies Database User
+        description: Username for the movies database
+        type: string
+        default: sa
+      moviesPassword:
+        title: Movies Database Password
+        description: Password for the movies database
+        type: string
+        default: ""
+      actorsUrl:
+        title: Actors Database URL
+        description: JDBC URL for the actors H2 database
+        type: string
+        example: jdbc:h2:tcp://h2-actors:9092/actors
+      actorsUser:
+        title: Actors Database User
+        description: Username for the actors database
+        type: string
+        default: sa
+      actorsPassword:
+        title: Actors Database Password
+        description: Password for the actors database
+        type: string
+        default: ""
+  dependencies:
+    - "camel:core"
+    - "camel:sql"
+    - "camel:jackson"
+    - "camel:kamelet"
+    - "mvn:com.h2database:h2:2.2.224"
+    - "mvn:org.apache.commons:commons-dbcp2:2.14.0"
+  template:
+    beans:
+      - name: moviesDb
+        type: "#class:org.apache.commons.dbcp2.BasicDataSource"
+        properties:
+          username: "{{moviesUser}}"
+          password: "{{moviesPassword}}"
+          url: "{{moviesUrl}}"
+          driverClassName: "org.h2.Driver"
+      - name: actorsDb
+        type: "#class:org.apache.commons.dbcp2.BasicDataSource"
+        properties:
+          username: "{{actorsUser}}"
+          password: "{{actorsPassword}}"
+          url: "{{actorsUrl}}"
+          driverClassName: "org.h2.Driver"
+    from:
+      uri: "sql:SELECT id, title, release_year, genre FROM movies ORDER BY title"
+      parameters:
+        dataSource: "#bean:{{moviesDb}}"
+        delay: "{{period}}"
+      steps:
+        - setProperty:
+            name: movieId
+            simple: "${body[ID]}"
+        - setProperty:
+            name: movieTitle
+            simple: "${body[TITLE]}"
+        - setProperty:
+            name: movieYear
+            simple: "${body[RELEASE_YEAR]}"
+        - setProperty:
+            name: movieGenre
+            simple: "${body[GENRE]}"
+        - setBody:
+            simple: "SELECT id, name, character_name FROM actors WHERE movie_id = '${exchangeProperty.movieId}'"
+        - to:
+            uri: "sql:."
+            parameters:
+              dataSource: "#bean:{{actorsDb}}"
+              outputType: SelectList
+              useMessageBodyForSql: true
+        - marshal:
+            json:
+              library: Jackson
+        - setProperty:
+            name: actorsJson
+            simple: "${body}"
+        - setBody:
+            simple: |-
+              {"movieId":"${exchangeProperty.movieId}","title":"${exchangeProperty.movieTitle}","year":${exchangeProperty.movieYear},"genre":"${exchangeProperty.movieGenre}","actors":${exchangeProperty.actorsJson}}
+        - to: "kamelet:sink"

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: h2-movies
+  labels:
+    app: h2-movies
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: h2-movies
+  template:
+    metadata:
+      labels:
+        app: h2-movies
+    spec:
+      containers:
+      - name: h2
+        image: kamelets-movies-actors-demo-h2-movies:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9092
+          name: tcp
+        - containerPort: 8082
+          name: web
+        env:
+        - name: INIT_SQL
+          value: "/opt/init/movies.sql"
+        - name: DB_NAME
+          value: "movies"
+        volumeMounts:
+        - name: init-sql
+          mountPath: /opt/init
+      volumes:
+      - name: init-sql
+        configMap:
+          name: movies-init-sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: h2-movies
+spec:
+  selector:
+    app: h2-movies
+  ports:
+  - port: 9092
+    targetPort: 9092
+    name: tcp
+  - port: 8082
+    targetPort: 8082
+    name: web

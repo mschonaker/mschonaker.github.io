@@ -1,0 +1,29 @@
+apiVersion: camel.apache.org/v1
+kind: Pipe
+metadata:
+  name: movies-actors-to-es
+spec:
+  source:
+    ref:
+      kind: Kamelet
+      apiVersion: camel.apache.org/v1
+      name: movies-actors-source
+    properties:
+      period: "30000"
+      moviesUrl: "jdbc:h2:tcp://h2-movies:9092/movies"
+      moviesUser: "sa"
+      moviesPassword: ""
+      actorsUrl: "jdbc:h2:tcp://h2-actors:9092/actors"
+      actorsUser: "sa"
+      actorsPassword: ""
+      indexName: "movies-actors-joined"
+  sink:
+    ref:
+      kind: Kamelet
+      apiVersion: camel.apache.org/v1
+      name: elasticsearch-index-sink
+    properties:
+      clusterName: "elasticsearch"
+      hostAddresses: "elasticsearch:9200"
+      indexName: "movies-actors-joined"
+      enableSSL: "false"

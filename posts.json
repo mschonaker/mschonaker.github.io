@@ -118,5 +118,13 @@
     "timestamp": 1743206400,
     "summary": "How to build and run the latest Zig compiler from source inside a Docker container.",
     "image": null
+  },
+  {
+    "id": "camel-k-pipeline",
+    "type": "article",
+    "file": "_posts/camel-k-data-pipeline-demo.md",
+    "timestamp": 1785291788,
+    "summary": "An end-to-end ETL pipeline with Apache Camel K on Kubernetes: reading from two H2 databases, joining data in-flight, and indexing into Elasticsearch — including debugging lessons.",
+    "image": "/images/camel-k-data-pipeline-header.png"
   }
 ]

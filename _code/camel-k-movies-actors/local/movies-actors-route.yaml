@@ -1,0 +1,70 @@
+///usr/bin/env jbang --quiet camel@apache/camel pipe "$0" "$@"; exit $?
+// Camel JBang local route for testing movies-actors join
+// Prerequisites: docker compose up -d (H2 + ES)
+
+- from:
+    uri: "timer:movies"
+    parameters:
+      period: "30000"
+    steps:
+      - log:
+          message: "Polling movies database..."
+      - setBody:
+          constant: "SELECT id, title, release_year, genre FROM movies ORDER BY title"
+      - to: "jdbc:moviesDb"
+      - split:
+          body:
+          steps:
+            - log:
+                message: "Processing movie: ${body[TITLE]}"
+
+            # Store movie info
+            - setProperty:
+                name: movieId
+                simple: "${body[ID]}"
+            - setProperty:
+                name: movieTitle
+                simple: "${body[TITLE]}"
+            - setProperty:
+                name: movieYear
+                simple: "${body[RELEASE_YEAR]}"
+            - setProperty:
+                name: movieGenre
+                simple: "${body[GENRE]}"
+
+            # Query actors for this movie
+            - setBody:
+                simple: "SELECT id, name, character_name FROM actors WHERE movie_id = '${exchangeProperty.movieId}'"
+            - to: "jdbc:actorsDb"
+
+            # Marshal actors to JSON string
+            - marshal:
+                json: {}
+            - setProperty:
+                name: actorsJson
+                simple: "${body}"
+
+            # Build joined JSON document
+            - setBody:
+                simple: |-
+                  {"movieId":"${exchangeProperty.movieId}","title":"${exchangeProperty.movieTitle}","year":${exchangeProperty.movieYear},"genre":"${exchangeProperty.movieGenre}","actors":${exchangeProperty.actorsJson}}
+
+            # Index into Elasticsearch
+            - setHeader:
+                name: indexName
+                constant: "movies-actors-joined"
+            - log:
+                message: "Indexing: ${body}"
+            - to:
+                uri: "elasticsearch:elasticsearch?operation=INDEX&hostAddresses=localhost:9200&indexName=movies-actors-joined&enableSSL=false"
+
+# =============================================
+# Bean / DataSource configuration in properties
+# =============================================
+# These are configured via application.properties:
+# camel.beans.moviesDb = #class:org.h2.jdbcx.JdbcDataSource
+# camel.beans.moviesDb.URL = jdbc:h2:tcp://localhost:9092/movies
+# camel.beans.moviesDb.user = sa
+# camel.beans.actorsDb = #class:org.h2.jdbcx.JdbcDataSource
+# camel.beans.actorsDb.URL = jdbc:h2:tcp://localhost:9093/actors
+# camel.beans.actorsDb.user = sa
