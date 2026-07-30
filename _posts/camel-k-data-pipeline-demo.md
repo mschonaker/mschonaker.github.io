@@ -508,6 +508,59 @@ jbang camel@apache/camel run \
 
 This runs the same Kamelets and Pipe configuration outside Kubernetes, which is useful for fast iteration. The `local/movies-actors-route.yaml` file provides an equivalent standalone route that predates the multi-Kamelet architecture.
 
+## Operational Behavior
+
+### How the pipeline reacts to database changes
+
+The pipeline polls the movies database every 30 seconds. It does **not** redeploy when data changes — the Integration pod runs continuously and picks up new data on the next poll cycle.
+
+| Database change | Automatic? | When | How |
+|----------------|-----------|------|-----|
+| **Insert** new movie | Yes | Next poll (≤30s) | SQL query returns the new row, pipeline indexes it with its actors |
+| **Update** movie title/genre | Yes | Next poll (≤30s) | New value in SQL result, ES upsert via `indexId` replaces the document |
+| **Insert/update** actors | Yes | Next poll (≤30s) | Actors are re-queried per movie, the joined document is re-built and upserted |
+| **Delete** movie or actors | **No** | Never | The SQL query skips deleted rows, but old ES documents are **never removed** |
+
+The `indexId` header makes inserts and updates safe — Elasticsearch upserts by document ID, so the same 50 documents are updated in-place every cycle. This also means you never accumulate duplicates, even if the integration restarts or you re-deploy the Pipe.
+
+### The stale-delete problem
+
+The one gap is deletions. If a movie is removed from the `movies` table, the pipeline simply stops seeing it in the `SELECT` results. The corresponding ES document stays in the index forever — nothing tells the pipeline to delete it.
+
+This is a fundamental limitation of timer-based SQL polling. The pipeline only knows what the database returns on each query. It has no way to detect that something is *missing*.
+
+Solutions:
+
+1. **Soft-delete column** — Add a `deleted` boolean to the movies table and filter `WHERE deleted = false`. The document still stays in ES, but at least the pipeline stops refreshing it. A separate cleanup job can purge stale ES documents after a grace period.
+
+2. **Full re-index on schedule** — Delete the ES index nightly and let the next poll rebuild everything from scratch. The `indexId` header ensures the same 50 IDs are recreated.
+
+3. **CDC (Change Data Capture)** — Instead of polling, listen to the database's binary log (binlog) for insert/update/delete events. This is the production-grade approach, covered in a follow-up post.
+
+### Why not redeploy?
+
+You never need to redeploy a Kamelet or Pipe because data changed. Kamelets are route templates, not snapshots. The Integration pod runs continuously and reacts to data at runtime. You only redeploy if you change the *logic* — a different SQL query, a new join strategy, a different target index.
+
+### When polling is enough
+
+Timer-based SQL polling works well when:
+
+- Latency of 30–60 seconds is acceptable
+- Deletions are rare or handled by a separate process
+- The dataset is small enough to re-read on every cycle (50 movies is trivially small)
+- You want a simple architecture with no message broker dependency
+
+### When you need CDC
+
+Change Data Capture becomes necessary when:
+
+- You need sub-second latency (deletions reflected immediately)
+- The dataset is too large to re-read on every poll (millions of rows)
+- You need an audit trail of all changes
+- The database is shared and you cannot add soft-delete columns
+
+**That is the topic of the next post.** Stay tuned for a CDC-based pipeline using Debezium and Camel K.
+
 ## The Debugging Journey
 
 This demo took several iterations to get right. Here are the bugs we encountered and how we fixed them.
@@ -613,4 +666,6 @@ Re-run the verification as many times as you like. The `indexId` header ensures 
 
 5. **Treat infrastructure Kamelets as pre-existing.** The Elasticsearch sink Kamelet is not part of the pipeline — it is deployed once and shared. The Pipe references it but does not own it. This separation of concerns reflects real-world team boundaries.
 
-6. **Pod logs are your best debug tool.** Adding `log:` steps to the route helped pinpoint that the actors query was returning zero rows due to the expression evaluation issue, not a database connectivity problem.
+6. **Polls propagate inserts and updates, but not deletes.** The timer-based SQL query automatically picks up new and changed rows within 30 seconds. Deleted rows leave stale ES documents behind. If your use case requires immediate delete propagation, CDC is the right tool — see the follow-up post.
+
+7. **Never redeploy for data changes.** The Integration pod runs continuously. Data changes flow through on the next poll cycle. Redeploy only when the *pipeline logic* changes — a different query, a new join, a different sink.
