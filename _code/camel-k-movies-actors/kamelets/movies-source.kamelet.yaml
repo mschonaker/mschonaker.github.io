@@ -1,0 +1,69 @@
+# ---------------------------------------------------------------------------
+# movies-source — Alice, 2024
+#
+# My first Kamelet.  Polls an H2 movies database once per period and
+# stores the movie fields as exchange properties so downstream Kamelets
+# can reference them without re-parsing the SQL row.
+#
+# I kept it simple: JdbcDataSource from H2 itself, short property names,
+# Groovy for property extraction.  Fancy connection pools felt like
+# overkill for a demo.
+# ---------------------------------------------------------------------------
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: movies-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Movies Source"
+    description: Polls movies from an H2 database
+    required:
+      - url
+    properties:
+      period:
+        type: integer
+        default: 60000
+      url:
+        type: string
+        example: jdbc:h2:tcp://h2-movies:9092/movies
+      user:
+        type: string
+        default: sa
+      pw:
+        type: string
+        default: ""
+        format: password
+  dependencies:
+    - "camel:core"
+    - "camel:sql"
+    - "camel:groovy"
+    - "mvn:com.h2database:h2:2.2.224"
+  template:
+    beans:
+      - name: ds
+        type: "#class:org.h2.jdbcx.JdbcDataSource"
+        properties:
+          url: "{{url}}"
+          user: "{{user}}"
+          password: "{{pw}}"
+    from:
+      uri: "sql:SELECT id, title, release_year, genre FROM movies ORDER BY title"
+      parameters:
+        dataSource: "#bean:ds"
+        delay: "{{period}}"
+      steps:
+        - setProperty:
+            name: movieId
+            groovy: "body['ID']"
+        - setProperty:
+            name: movieTitle
+            groovy: "body['TITLE']"
+        - setProperty:
+            name: movieYear
+            groovy: "body['RELEASE_YEAR']"
+        - setProperty:
+            name: movieGenre
+            groovy: "body['GENRE']"
+        - to: kamelet:sink

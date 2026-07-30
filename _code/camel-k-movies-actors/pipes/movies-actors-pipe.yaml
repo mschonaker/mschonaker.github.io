@@ -2,21 +2,32 @@ apiVersion: camel.apache.org/v1
 kind: Pipe
 metadata:
   name: movies-actors-to-es
+  annotations:
+    camel.apache.org/description: >-
+      Binds movies-source (polls H2 movies DB) through groovy-join
+      (queries actors per movie, joins via Groovy) into the
+      elasticsearch-index-sink.  Elasticsearch is pre-existing
+      infrastructure — not created by this Pipe.
 spec:
   source:
     ref:
       kind: Kamelet
       apiVersion: camel.apache.org/v1
-      name: movies-actors-source
+      name: movies-source
     properties:
       period: "30000"
-      moviesUrl: "jdbc:h2:tcp://h2-movies:9092/movies"
-      moviesUser: "sa"
-      moviesPassword: ""
-      actorsUrl: "jdbc:h2:tcp://h2-actors:9092/actors"
-      actorsUser: "sa"
-      actorsPassword: ""
-      indexName: "movies-actors-joined"
+      url: "jdbc:h2:tcp://h2-movies:9092/movies"
+      user: "sa"
+      pw: ""
+  steps:
+    - ref:
+        kind: Kamelet
+        apiVersion: camel.apache.org/v1
+        name: groovy-join
+      properties:
+        actorsUrl: "jdbc:h2:tcp://h2-actors:9092/actors"
+        actorsUser: "sa"
+        actorsPassword: ""
   sink:
     ref:
       kind: Kamelet

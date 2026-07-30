@@ -96,41 +96,54 @@ docker push "$REGISTRY_IP:5000/h2-actors:latest" 2>/dev/null || echo "Note: Push
 echo ""
 
 # --------------------------------------------------
-# Step 6: Deploy H2 databases and Elasticsearch
+# Step 6: Deploy pre-existing infrastructure
+#         (ES cluster + ES sink Kamelet — deployed
+#          once, shared across pipelines)
 # --------------------------------------------------
-echo "=== Step 6: Deploy infrastructure ==="
+echo "=== Step 6: Deploy pre-existing infrastructure ==="
+kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/k8s/elasticsearch.yaml"
+echo "Waiting for Elasticsearch..."
+kubectl wait --for=condition=Available deployment/elasticsearch -n "$NAMESPACE" --timeout=180s
+
+# Apply the cleaned ES sink Kamelet (infrastructure, not pipeline)
+kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/kamelets/elasticsearch-index-sink.kamelet.yaml"
+echo "Elasticsearch sink Kamelet applied (infrastructure)."
+echo ""
+
+# --------------------------------------------------
+# Step 7: Deploy pipeline databases (H2)
+# --------------------------------------------------
+echo "=== Step 7: Deploy pipeline databases ==="
 kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/k8s/h2-movies.yaml"
 kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/k8s/h2-actors.yaml"
-kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/k8s/elasticsearch.yaml"
 
 echo "Waiting for H2 movies..."
 kubectl wait --for=condition=Available deployment/h2-movies -n "$NAMESPACE" --timeout=120s
 echo "Waiting for H2 actors..."
 kubectl wait --for=condition=Available deployment/h2-actors -n "$NAMESPACE" --timeout=120s
-echo "Waiting for Elasticsearch..."
-kubectl wait --for=condition=Available deployment/elasticsearch -n "$NAMESPACE" --timeout=180s
 echo ""
 
 # --------------------------------------------------
-# Step 7: Apply custom Kamelet and Pipe
+# Step 8: Apply pipeline Kamelets and Pipe
 # --------------------------------------------------
-echo "=== Step 7: Apply Kamelet and Pipe ==="
-kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/kamelets/movies-actors-source.kamelet.yaml"
+echo "=== Step 8: Apply pipeline Kamelets and Pipe ==="
+kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/kamelets/movies-source.kamelet.yaml"
+kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/kamelets/groovy-join.kamelet.yaml"
 kubectl apply -n "$NAMESPACE" -f "$SCRIPT_DIR/pipes/movies-actors-pipe.yaml"
 echo ""
 
 # --------------------------------------------------
-# Step 8: Wait for Pipe to be ready
+# Step 9: Wait for Pipe to be ready
 # --------------------------------------------------
-echo "=== Step 8: Wait for Pipe/Integration ==="
+echo "=== Step 9: Wait for Pipe/Integration ==="
 echo "Waiting for Pipe to be ready..."
 kubectl wait --for=jsonpath='{.status.phase}'=Ready pipe/movies-actors-to-es -n "$NAMESPACE" --timeout=300s 2>/dev/null || true
 echo ""
 
 # --------------------------------------------------
-# Step 9: Verify
+# Step 10: Verify
 # --------------------------------------------------
-echo "=== Step 9: Verify ==="
+echo "=== Step 10: Verify ==="
 echo ""
 echo "Pods:"
 kubectl get pods -n "$NAMESPACE"

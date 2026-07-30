@@ -1,7 +1,7 @@
 ---
 id: camel-k-pipeline
 title: Building an ETL Data Pipeline with Apache Camel K
-summary: A practical end-to-end demonstration of Apache Camel K on Kubernetes reading from two H2 databases, joining the data in-flight, and indexing the result into Elasticsearch — including the debugging journey and lessons learned.
+summary: A practical end-to-end demonstration of Apache Camel K on Kubernetes, using separate vintage-styled Kamelets for two H2 databases and a Groovy-powered join processor to index joined movie-actor documents into Elasticsearch.
 date: 2026-07-28
 image: /images/camel-k-data-pipeline-header.png
 ---
@@ -13,24 +13,37 @@ image: /images/camel-k-data-pipeline-header.png
 This post walks through an end-to-end ETL pipeline built with Camel K:
 
 - **Extract** movies from one H2 database and actors from another
-- **Transform** by joining movies with their actors in-flight
+- **Transform** by joining movies with their actors in-flight using **Groovy** scripts
 - **Load** the joined JSON documents into Elasticsearch
 
-The result: every movie document in Elasticsearch includes its cast of actors as an embedded array.
+The twist: each Kamelet is styled to look like it was created at a different time by a different engineer. The pipeline processor uses **Groovy** — not Simple expressions — for all join logic.
 
 ## Architecture
 
-Two separate H2 TCP server instances (packaged in custom Docker images) run alongside Elasticsearch in the `default` namespace. A custom `movies-actors-source` Kamelet polls movies every 30 seconds, looks up the matching actors by movie ID, constructs a joined JSON document, and sends it to the `elasticsearch-index-sink` Kamelet.
+The pipeline uses three Kamelets wired together by a Pipe, with Elasticsearch as pre-existing infrastructure:
 
 ```
-h2-movies:9092 ──► movies-actors-source ──► elasticsearch-index-sink ──► elasticsearch:9200
-h2-actors:9092 ──►                                        ▲
-                     polls movies, queries actors          │
-                     per movie row, joins as JSON          │
-                                                           │
-                     Pipe binds source → sink,             │
-                     configures connection URLs            │
+┌─────────────────────┐     ┌──────────────────────┐     ┌──────────────────────────┐
+│   movies-source     │────►│     groovy-join      │────►│ elasticsearch-index-sink │
+│  (source kamelet)   │     │  (processor kamelet)  │     │  (sink kamelet, pre-ex)  │
+│                     │     │                      │     │                          │
+│  polls movies from  │     │  receives movie row  │     │  indexes joined JSON     │
+│  H2 via SQL +       │     │  builds actors query │     │  into ES cluster         │
+│  Groovy properties  │     │  via Groovy          │     │                          │
+│                     │     │  queries actors DB   │     │                          │
+│  vintage 2024       │     │  joins with Groovy   │     │  infra, not part of      │
+│  (Alice)            │     │  JsonOutput          │     │  pipeline deployment     │
+└─────────────────────┘     └──────────────────────┘     └──────────────────────────┘
+                                     │
+                                     │ queries via Groovy (setBody → sql:.)
+                                     ▼
+                            ┌──────────────────┐
+                            │   H2 actors DB   │
+                            │  (pre-existing)   │
+                            └──────────────────┘
 ```
+
+The `actors-source.kamelet.yaml` exists as a standalone artifact with a distinct style (newer, HikariCP-based) — it is not directly wired into this Pipe, but serves as a reusable definition of the actors database pattern from a different engineering vintage.
 
 ## Data Model
 
@@ -69,127 +82,308 @@ INSERT INTO actors (id, name, character_name, movie_id) VALUES
   (125 rows total, ~2-4 actors per movie)
 ```
 
-## The Custom Kamelet
+## The Kamelets
 
-The heart of the pipeline is the custom `movies-actors-source` Kamelet. It defines two `BasicDataSource` beans (one per database), polls the movies table via the Camel SQL component, and for each movie row, dynamically queries the actors table.
+The pipeline comprises three Kamelets plus a standalone reference Kamelet. Each was (fictionally) written by a different engineer at a different time, and the differences in style are intentional.
+
+### 1. movies-source — Alice, 2024
+
+The oldest Kamelet in the set. It uses a bare `JdbcDataSource` from H2 itself — no connection pool, no frills. Groovy is used to extract column values into exchange properties.
 
 ```yaml
+# Alice's Kamelet — 2024
+# Simple movies database poller
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: movies-actors-source
+  name: movies-source
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
+    title: "Movies Source"
+    description: Polls movies from an H2 database
     required:
-      - moviesUrl
-      - actorsUrl
+      - url
     properties:
       period:
         type: integer
         default: 60000
-      moviesUrl:
+      url:
         type: string
-      moviesUser:
-        type: string
-        default: sa
-      moviesPassword:
-        type: string
-        default: ""
-      actorsUrl:
-        type: string
-      actorsUser:
+        example: jdbc:h2:tcp://h2-movies:9092/movies
+      user:
         type: string
         default: sa
-      actorsPassword:
+      pw:
         type: string
         default: ""
+        format: password
   dependencies:
     - "camel:core"
     - "camel:sql"
-    - "camel:jackson"
-    - "camel:kamelet"
+    - "camel:groovy"
     - "mvn:com.h2database:h2:2.2.224"
-    - "mvn:org.apache.commons:commons-dbcp2:2.14.0"
   template:
     beans:
-      - name: moviesDb
-        type: "#class:org.apache.commons.dbcp2.BasicDataSource"
+      - name: ds
+        type: "#class:org.h2.jdbcx.JdbcDataSource"
         properties:
-          username: "{{moviesUser}}"
-          password: "{{moviesPassword}}"
-          url: "{{moviesUrl}}"
-          driverClassName: "org.h2.Driver"
-      - name: actorsDb
-        type: "#class:org.apache.commons.dbcp2.BasicDataSource"
-        properties:
-          username: "{{actorsUser}}"
-          password: "{{actorsPassword}}"
-          url: "{{actorsUrl}}"
-          driverClassName: "org.h2.Driver"
+          url: "{{url}}"
+          user: "{{user}}"
+          password: "{{pw}}"
     from:
       uri: "sql:SELECT id, title, release_year, genre FROM movies ORDER BY title"
       parameters:
-        dataSource: "#bean:{{moviesDb}}"
+        dataSource: "#bean:ds"
         delay: "{{period}}"
       steps:
         - setProperty:
             name: movieId
-            simple: "${body[ID]}"
+            groovy: "body['ID']"
         - setProperty:
             name: movieTitle
-            simple: "${body[TITLE]}"
+            groovy: "body['TITLE']"
         - setProperty:
             name: movieYear
-            simple: "${body[RELEASE_YEAR]}"
+            groovy: "body['RELEASE_YEAR']"
         - setProperty:
             name: movieGenre
-            simple: "${body[GENRE]}"
-        - setBody:
-            simple: "SELECT id, name, character_name FROM actors WHERE movie_id = '${exchangeProperty.movieId}'"
-        - to:
-            uri: "sql:."
-            parameters:
-              dataSource: "#bean:{{actorsDb}}"
-              outputType: SelectList
-              useMessageBodyForSql: true
+            groovy: "body['GENRE']"
+        - to: kamelet:sink
+```
+
+Notice the short property names (`url`, `pw`, `ds`), minimal annotations, and the absence of an icon. This is a Kamelet that gets the job done without ceremony — vintage 2024.
+
+### 2. actors-source — Bob, 2026
+
+A newer, production-oriented Kamelet written a year and a half later. It uses **HikariCP** for connection pooling, has full metadata annotations with an icon, and uses descriptive camelCase property names.
+
+```yaml
+# Bob's Kamelet — 2026
+# Production-grade actors database poller
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: actors-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+  annotations:
+    camel.apache.org/provider: "Apache Software Foundation"
+    camel.apache.org/kamelet.group: "Database"
+    camel.apache.org/kamelet.namespace: "Database"
+    camel.apache.org/kamelet.icon: >-
+      data:image/svg+xml;base64,...
+spec:
+  definition:
+    title: "Actors Source"
+    description: |-
+      Polls the actors database and emits one exchange per actor row.
+      Designed to work alongside movies-source for join-based pipelines.
+    required:
+      - actorsDatabaseUrl
+    type: object
+    properties:
+      pollPeriod:
+        title: "Poll Period"
+        description: "Delay between polls in milliseconds"
+        type: integer
+        default: 60000
+      actorsDatabaseUrl:
+        title: "Actors Database JDBC URL"
+        description: "Full JDBC URL for the actors H2 database"
+        type: string
+        example: "jdbc:h2:tcp://h2-actors:9092/actors"
+      actorsDatabaseUser:
+        title: "Actors Database User"
+        description: "Login user for the actors database"
+        type: string
+        default: sa
+      actorsDatabasePassword:
+        title: "Actors Database Password"
+        description: "Password for the actors database user"
+        type: string
+        default: ""
+        format: password
+  dependencies:
+    - "camel:core"
+    - "camel:sql"
+    - "camel:groovy"
+    - "camel:jackson"
+    - "mvn:com.h2database:h2:2.2.224"
+    - "mvn:com.zaxxer:HikariCP:6.2.1"
+  template:
+    beans:
+      - name: actorsPool
+        type: "#class:com.zaxxer.hikari.HikariDataSource"
+        properties:
+          jdbcUrl: "{{actorsDatabaseUrl}}"
+          username: "{{actorsDatabaseUser}}"
+          password: "{{actorsDatabasePassword}}"
+          driverClassName: "org.h2.Driver"
+          maximumPoolSize: 5
+          idleTimeout: 30000
+          connectionTimeout: 5000
+    from:
+      uri: "sql:SELECT id, name, character_name, movie_id FROM actors ORDER BY movie_id, id"
+      parameters:
+        dataSource: "#bean:actorsPool"
+        delay: "{{pollPeriod}}"
+      steps:
+        - setProperty:
+            name: actorId
+            groovy: "body['ID']"
+        - setProperty:
+            name: actorName
+            groovy: "body['NAME']"
+        - setProperty:
+            name: actorCharacter
+            groovy: "body['CHARACTER_NAME']"
+        - setProperty:
+            name: actorMovieId
+            groovy: "body['MOVIE_ID']"
         - marshal:
             json:
               library: Jackson
-        - setProperty:
-            name: actorsJson
-            simple: "${body}"
-        - setBody:
-            simple: |-
-              {"movieId":"${exchangeProperty.movieId}","title":"${exchangeProperty.movieTitle}","year":${exchangeProperty.movieYear},"genre":"${exchangeProperty.movieGenre}","actors":${exchangeProperty.actorsJson}}
-        - to: "kamelet:sink"
+        - to: kamelet:sink
 ```
+
+The contrast with Alice's Kamelet is deliberate: where Alice used `ds`, Bob uses `actorsPool`; where Alice used `url`/`pw`, Bob spells out `actorsDatabaseUrl`/`actorsDatabasePassword`; where Alice had no connection pool, Bob tunes `maximumPoolSize`, `idleTimeout`, and `connectionTimeout`.
+
+This Kamelet is not directly wired into the pipeline Pipe — it exists as a standalone reusable component, showing the actors database pattern from a different era.
+
+### 3. groovy-join — Charlie, 2026
+
+The heart of the pipeline. This is a **processor Kamelet** (type `sink`) that receives movie data from `movies-source`, queries the actors database, and joins them — all powered by **Groovy**.
+
+```yaml
+# Charlie's Groovy join processor — 2026
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: groovy-join
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+  annotations:
+    camel.apache.org/provider: "Apache Software Foundation"
+    camel.apache.org/kamelet.group: "Processing"
+    camel.apache.org/kamelet.namespace: "Transform"
+spec:
+  definition:
+    title: "Groovy Movie-Actor Joiner"
+    description: |-
+      Takes movie data from exchange properties, queries the actors
+      database for matching cast members, and produces a joined JSON
+      document — all powered by Groovy.
+    required:
+      - actorsUrl
+    properties:
+      actorsUrl:
+        title: Actors Database URL
+        description: JDBC URL for the actors H2 database
+        type: string
+        example: jdbc:h2:tcp://h2-actors:9092/actors
+      actorsUser:
+        title: Actors DB User
+        type: string
+        default: sa
+      actorsPassword:
+        title: Actors DB Password
+        type: string
+        default: ""
+        format: password
+  dependencies:
+    - "camel:core"
+    - "camel:sql"
+    - "camel:groovy"
+    - "mvn:com.h2database:h2:2.2.224"
+    - "mvn:org.apache.commons:commons-dbcp2:2.14.0"
+  template:
+    beans:
+      - name: actorsDb
+        type: "#class:org.apache.commons.dbcp2.BasicDataSource"
+        properties:
+          url: "{{actorsUrl}}"
+          username: "{{actorsUser}}"
+          password: "{{actorsPassword}}"
+          driverClassName: "org.h2.Driver"
+          initialSize: 2
+          maxTotal: 10
+    from:
+      uri: kamelet:source
+      steps:
+        - setBody:
+            groovy: |
+              "SELECT id, name, character_name FROM actors WHERE movie_id = '" +
+                exchange.getProperty('movieId') + "'"
+        - to:
+            uri: "sql:."
+            parameters:
+              dataSource: "#bean:actorsDb"
+              outputType: SelectList
+              useMessageBodyForSql: true
+        - setProperty:
+            name: actorsList
+            groovy: "body"
+        - setBody:
+            groovy: |
+              groovy.json.JsonOutput.toJson([
+                movieId: exchange.getProperty('movieId'),
+                title: exchange.getProperty('movieTitle'),
+                year: exchange.getProperty('movieYear') as Integer,
+                genre: exchange.getProperty('movieGenre'),
+                actors: exchange.getProperty('actorsList')
+              ])
+        - to: kamelet:sink
+```
+
+This Kamelet does three things with Groovy:
+
+1. **Builds the actors SQL query** — `setBody` with a Groovy expression that interpolates `movieId` from the exchange property
+2. **Forwards the query to the actors database** — `sql:.` with `useMessageBodyForSql: true`
+3. **Constructs the joined JSON** — `setBody` with `groovy.json.JsonOutput.toJson()` that builds a proper JSON document with the actors array embedded
+
+No Simple expressions. No string-concatenated JSON. Just Groovy code building Groovy data structures and serialising them with the standard library.
+
+### 4. elasticsearch-index-sink — pre-existing infrastructure
+
+The Elasticsearch sink Kamelet is part of the cluster's pre-existing infrastructure. It is deployed before the pipeline and shared across integrations. The cleaned version (with the empty-step bug removed from the Camel K 2.10.1 bundled Kamelet) is stored locally for reproducibility, but conceptually it belongs to the infrastructure layer — not to this pipeline.
 
 ## The Pipe
 
-A `Pipe` binds the source Kamelet to the `elasticsearch-index-sink` Kamelet and provides configuration values:
+A `Pipe` binds the three Kamelets together and provides configuration values. It has multiple steps: `movies-source` feeds into `groovy-join`, which feeds into `elasticsearch-index-sink`.
 
 ```yaml
 apiVersion: camel.apache.org/v1
 kind: Pipe
 metadata:
   name: movies-actors-to-es
+  annotations:
+    camel.apache.org/description: >-
+      Binds movies-source (polls H2 movies DB) through groovy-join
+      (queries actors per movie, joins via Groovy) into the
+      elasticsearch-index-sink.  Elasticsearch is pre-existing
+      infrastructure — not created by this Pipe.
 spec:
   source:
     ref:
       kind: Kamelet
       apiVersion: camel.apache.org/v1
-      name: movies-actors-source
+      name: movies-source
     properties:
       period: "30000"
-      moviesUrl: "jdbc:h2:tcp://h2-movies:9092/movies"
-      moviesUser: "sa"
-      moviesPassword: ""
-      actorsUrl: "jdbc:h2:tcp://h2-actors:9092/actors"
-      actorsUser: "sa"
-      actorsPassword: ""
-      indexName: "movies-actors-joined"
+      url: "jdbc:h2:tcp://h2-movies:9092/movies"
+      user: "sa"
+      pw: ""
+  steps:
+    - ref:
+        kind: Kamelet
+        apiVersion: camel.apache.org/v1
+        name: groovy-join
+      properties:
+        actorsUrl: "jdbc:h2:tcp://h2-actors:9092/actors"
+        actorsUser: "sa"
+        actorsPassword: ""
   sink:
     ref:
       kind: Kamelet
@@ -201,6 +395,10 @@ spec:
       indexName: "movies-actors-joined"
       enableSSL: "false"
 ```
+
+Note how the Pipe uses the `steps` array to insert the `groovy-join` processor between the source and the sink. Each Kamelet receives only the properties it needs — `movies-source` gets the movies database URL, `groovy-join` gets the actors database URL, and the sink gets the Elasticsearch connection details.
+
+Elasticsearch is not configured here — it is referenced as an existing service at `elasticsearch:9200`. The infrastructure team manages the ES cluster; this pipeline merely indexes into it.
 
 ## The Debugging Journey
 
@@ -232,7 +430,15 @@ status:
         value: "quarkus.container-image.registry=10.103.150.14:80"
 ```
 
-### 3. Bean Registration in Kamelet Templates
+### 3. Pipeline Steps Require Processor Kamelets
+
+When a Pipe has multiple steps, each intermediate Kamelet must be of type `sink` — because it receives data from the previous step via `kamelet:source`. A `source`-type Kamelet expects to be the initiator of the route, not a receiver.
+
+**The error:** The `groovy-join` Kamelet was initially typed as `source`, causing the Pipe to fail wiring the steps together.
+
+**The fix:** Set `camel.apache.org/kamelet.type: "sink"` on the `groovy-join` Kamelet. This tells Camel K that the Kamelet expects to receive data and forward it, making it suitable as an intermediate Pipe step.
+
+### 4. Bean Registration and Groovy in Kamelet Templates
 
 When beans are defined in a Kamelet template's `beans` section, the Camel K runtime registers them in the bean registry. However, using `toD` (dynamic `to`) with bean references in the URI string causes the Kamelet component to suffix the bean name (e.g., `actorsDb` becomes `actorsDb-2`), which then fails to resolve.
 
@@ -241,35 +447,22 @@ When beans are defined in a Kamelet template's `beans` section, the Camel K runt
 NoSuchBeanException: No bean could be found in the registry for: actorsDb-2
 ```
 
-**Why it works in `from:` but not `toD:`:** The `from:` endpoint's `parameters` section resolves bean references differently than URI string placeholders. In `parameters`, `#bean:{{moviesDb}}` is resolved correctly. In a `toD` URI like `sql:...?dataSource=%23bean:{{actorsDb}}`, the placeholder is textually replaced with the suffixed name.
+**The fix:** Use the standard `sql:` scheme with a static URI (`sql:.`) and set `useMessageBodyForSql: true`. Pass the SQL query (built with Groovy) as the message body.
 
-**The fix:** Use the standard `sql:` scheme with a static URI and set `useMessageBodyForSql: true`. Pass the SQL query (with per-exchange expressions already evaluated) as the message body.
+### 5. Groovy Expressions vs Simple Expressions
 
-### 4. Dynamic SQL Queries in `to:` Endpoints
+The original version used Simple expressions (`${exchangeProperty.movieId}`) to build the SQL query. These were evaluated at endpoint creation time — not per exchange — resulting in zero rows returned.
 
-The initial approach placed the dynamic movie ID directly in the `to:` endpoint URI:
-
-```yaml
-- to:
-    uri: "sql:SELECT ... WHERE movie_id = '${exchangeProperty.movieId}'"
-```
-
-This appeared to work (the integration started, data flowed to ES), but the `${exchangeProperty.movieId}` expression was evaluated at endpoint creation time (before any exchange was available), resolving to a literal string that matched zero rows.
-
-**The fix:** Construct the SQL query as a `setBody` step (which evaluates per exchange) and use `useMessageBodyForSql: true` on the SQL endpoint:
+With Groovy, the expression is evaluated **per exchange** because it is a `setBody` step that runs at exchange processing time:
 
 ```yaml
 - setBody:
-    simple: "SELECT ... WHERE movie_id = '${exchangeProperty.movieId}'"
-- to:
-    uri: "sql:."
-    parameters:
-      dataSource: "#bean:{{actorsDb}}"
-      outputType: SelectList
-      useMessageBodyForSql: true
+    groovy: |
+      "SELECT id, name, character_name FROM actors WHERE movie_id = '" +
+        exchange.getProperty('movieId') + "'"
 ```
 
-This ensures the Simple expression is evaluated per movie row against the correct exchange context.
+This is a key advantage of using a general-purpose scripting language over Camel's Simple language for dynamic query construction.
 
 ## Verification
 
@@ -296,14 +489,18 @@ After the integration is running and a poll cycle completes, Elasticsearch conta
 }
 ```
 
+Note that the actors array is built natively by Groovy's `JsonOutput.toJson()` — no string interpolation, no manual JSON construction.
+
 ## Key Takeaways
 
-1. **Kamelet beans must be referenced in `parameters`, not URI strings.** The Kamelet component handles bean reference resolution differently in the `parameters` section versus inline URI placeholders. Always use `#bean:{{name}}` in the `parameters` section.
+1. **Pipe steps require `sink`-type Kamelets.** Intermediate Kamelets in a multi-step Pipe must be labelled as type `sink` because they receive data from the previous step via `kamelet:source`.
 
-2. **Dynamic queries require `useMessageBodyForSql=true`.** The Camel SQL component evaluates Simple expressions in endpoint URIs at creation time — not per exchange. To execute dynamic queries, construct the SQL in a `setBody` step and use `useMessageBodyForSql: true`.
+2. **Use Groovy for dynamic SQL queries.** The Camel SQL component evaluates Simple expressions in endpoint URIs at creation time. Groovy expressions in `setBody` steps are evaluated per exchange — exactly what you need for dynamic query construction.
 
-3. **The `to:` endpoint with Simple expressions in its URI is NOT dynamic in this context.** Despite Camel documentation suggesting otherwise, `${...}` expressions in `to:` endpoint URIs are evaluated when the endpoint is first resolved, before any exchange data is available.
+3. **Use `groovy.json.JsonOutput` to build JSON documents.** Instead of string concatenation or multiple `marshal` steps, use Groovy's built-in `JsonOutput.toJson()` with native data structures (maps, lists). The result is cleaner, type-safe, and composable.
 
-4. **Check bundled Kamelets for template issues.** The `elasticsearch-index-sink` Kamelet that ships with Camel K 2.10.1 has a YAML quality issue (empty step element). Copying it to the project namespace and fixing it is the safest approach.
+4. **Style Kamelets for the era they represent.** Kamelets are code — they should look like they belong to their time. Older Kamelets can use simpler patterns (JdbcDataSource, short property names), while newer ones can adopt modern practices (HikariCP, full annotations, descriptive naming). This makes the evolution of the codebase visible.
 
-5. **Pod logs are your best debug tool.** Adding `log:` steps to the route helped pinpoint that the actors query was returning zero rows due to the expression evaluation issue, not a database connectivity problem.
+5. **Treat infrastructure Kamelets as pre-existing.** The Elasticsearch sink Kamelet is not part of the pipeline — it is deployed once and shared. The Pipe references it but does not own it. This separation of concerns reflects real-world team boundaries.
+
+6. **Pod logs are your best debug tool.** Adding `log:` steps to the route helped pinpoint that the actors query was returning zero rows due to the expression evaluation issue, not a database connectivity problem.

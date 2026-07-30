@@ -1,3 +1,13 @@
+# ---------------------------------------------------------------------------
+# elasticsearch-index-sink — pre-existing infrastructure
+#
+# This is the standard Camel K Elasticsearch Index Sink Kamelet, cleaned
+# of the empty-step bug that ships with Camel K 2.10.1.
+#
+# It is part of the cluster's pre-existing infrastructure — deployed
+# before any pipeline Kamelets are applied.  The Pipe references it as a
+# sink; it does not need to be re-deployed per pipeline.
+# ---------------------------------------------------------------------------
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:

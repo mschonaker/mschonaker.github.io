@@ -1,0 +1,98 @@
+# ---------------------------------------------------------------------------
+# groovy-join — Charlie, 2026
+#
+# Pipeline processor Kamelet.  Receives a movie row from movies-source,
+# uses Groovy to query the actors database and build a joined JSON
+# document that embeds each film's cast.
+#
+# This is where Groovy shines: no Simple expression hacks, no
+# string-concatenated JSON — real code building real data structures.
+#
+# Pre-requisites:
+#   - Exchange properties movieId, movieTitle, movieYear, movieGenre
+#     (set by a previous step such as movies-source)
+#   - A running H2 actors database reachable at actorsUrl
+# ---------------------------------------------------------------------------
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: groovy-join
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+  annotations:
+    camel.apache.org/provider: "Apache Software Foundation"
+    camel.apache.org/kamelet.group: "Processing"
+    camel.apache.org/kamelet.namespace: "Transform"
+spec:
+  definition:
+    title: "Groovy Movie-Actor Joiner"
+    description: |-
+      Takes movie data from exchange properties, queries the actors
+      database for matching cast members, and produces a joined JSON
+      document — all powered by Groovy.
+    required:
+      - actorsUrl
+    properties:
+      actorsUrl:
+        title: Actors Database URL
+        description: JDBC URL for the actors H2 database
+        type: string
+        example: jdbc:h2:tcp://h2-actors:9092/actors
+      actorsUser:
+        title: Actors DB User
+        type: string
+        default: sa
+      actorsPassword:
+        title: Actors DB Password
+        type: string
+        default: ""
+        format: password
+  dependencies:
+    - "camel:core"
+    - "camel:sql"
+    - "camel:groovy"
+    - "mvn:com.h2database:h2:2.2.224"
+    - "mvn:org.apache.commons:commons-dbcp2:2.14.0"
+  template:
+    beans:
+      - name: actorsDb
+        type: "#class:org.apache.commons.dbcp2.BasicDataSource"
+        properties:
+          url: "{{actorsUrl}}"
+          username: "{{actorsUser}}"
+          password: "{{actorsPassword}}"
+          driverClassName: "org.h2.Driver"
+          initialSize: 2
+          maxTotal: 10
+    from:
+      uri: kamelet:source
+      steps:
+        # -- query actors via Groovy-built SQL --------------------------------
+        - setBody:
+            groovy: |
+              "SELECT id, name, character_name FROM actors WHERE movie_id = '" + exchange.getProperty('movieId') + "'"
+        - to:
+            uri: "sql:."
+            parameters:
+              dataSource: "#bean:actorsDb"
+              outputType: SelectList
+              useMessageBodyForSql: true
+
+        # -- store raw actor rows as exchange property -----------------------
+        - setProperty:
+            name: actorsList
+            groovy: "body"
+
+        # -- build the final joined JSON with Groovy JsonOutput --------------
+        - setBody:
+            groovy: |
+              groovy.json.JsonOutput.toJson([
+                movieId: exchange.getProperty('movieId'),
+                title: exchange.getProperty('movieTitle'),
+                year: exchange.getProperty('movieYear') as Integer,
+                genre: exchange.getProperty('movieGenre'),
+                actors: exchange.getProperty('actorsList')
+              ])
+
+        # -- forward to the next step (elasticsearch-index-sink) -------------
+        - to: kamelet:sink
