@@ -1,0 +1,41 @@
+apiVersion: camel.apache.org/v1
+kind: Pipe
+metadata:
+  name: movies-actors-cdc
+  annotations:
+    camel.apache.org/description: >-
+      CDC pipeline: streams movies changes from PostgreSQL via Debezium,
+      joins with actors via Groovy, and indexes/deletes documents in
+      Elasticsearch.  Deletes are propagated — not left as stale.
+spec:
+  source:
+    ref:
+      kind: Kamelet
+      apiVersion: camel.apache.org/v1
+      name: movies-cdc-source
+    properties:
+      dbHost: "postgres.default.svc"
+      dbPort: "5432"
+      dbUser: "postgres"
+      dbPassword: "postgres"
+      dbName: "movies_db"
+      tableInclude: "public.movies"
+  steps:
+    - ref:
+        kind: Kamelet
+        apiVersion: camel.apache.org/v1
+        name: groovy-cdc-processor
+      properties:
+        actorsJdbcUrl: "jdbc:postgresql://postgres.default.svc:5432/movies_db"
+        actorsDbUser: "postgres"
+        actorsDbPassword: "postgres"
+  sink:
+    ref:
+      kind: Kamelet
+      apiVersion: camel.apache.org/v1
+      name: elasticsearch-index-sink
+    properties:
+      clusterName: "elasticsearch"
+      hostAddresses: "elasticsearch:9200"
+      indexName: "movies-actors-joined"
+      enableSSL: "false"

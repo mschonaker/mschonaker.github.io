@@ -1,0 +1,98 @@
+# --------------------------------------------------------------------------
+# actors-cdc-source — Bob, 2026
+#
+# PostgreSQL CDC source for the actors table.  Uses the same
+# debezium-postgres component as movies-cdc-source but configured for
+# the actors table with explicit slot management and TLS settings.
+#
+# This Kamelet is a standalone reference — it is not wired into the
+# pipeline Pipe directly, but demonstrates the actors table pattern
+# from a different engineering vintage.
+#
+# History:
+#   2026-07  Bob  Initial revision after movies-cdc-source proved
+#                 the Debezium approach worked.
+# --------------------------------------------------------------------------
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: actors-cdc-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+  annotations:
+    camel.apache.org/provider: "Apache Software Foundation"
+    camel.apache.org/kamelet.group: "Database"
+    camel.apache.org/kamelet.namespace: "CDC"
+    camel.apache.org/kamelet.icon: >-
+      data:image/svg+xml;base64,
+      PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgdmlld0JveD0iMCAwIDUwIDUwIj48cGF0aCBkPSJNMjUgMkMxMiAzIDIgMTIgMiAyNXMxMCAyMyAyMyAyMyAyMy0xMCAyMy0yM1MzOCAzIDI1IDJ6bTAgNDVjLTEyLjEgMC0yMi05LjktMjItMjJzOS45LTIyIDIyLTIyIDIyIDkuOSAyMiAyMi05LjkgMjItMjIgMjJ6IiBmaWxsPSIjNDI4NWY0Ii8+PHBhdGggZD0iTTE1IDMwaDEwdjEwSDE1em0xMC0xMGgxMHYxMEgyNXoiIGZpbGw9IiM0Mjg1ZjQiLz48L3N2Zz4=
+spec:
+  definition:
+    title: "Actors CDC Source"
+    description: |-
+      Streams change events from the PostgreSQL actors table via Debezium.
+      Designed to work alongside movies-cdc-source for join-based pipelines.
+    required:
+      - actorsDatabaseHost
+      - actorsDatabasePassword
+    type: object
+    properties:
+      actorsDatabaseHost:
+        title: "Database Host"
+        description: "PostgreSQL hostname for the actors database"
+        type: string
+        example: "postgres.default.svc"
+      actorsDatabasePort:
+        title: "Database Port"
+        type: string
+        default: "5432"
+      actorsDatabaseUser:
+        title: "Database User"
+        type: string
+        default: postgres
+      actorsDatabasePassword:
+        title: "Database Password"
+        description: "Password for the PostgreSQL user"
+        type: string
+        default: ""
+        format: password
+      actorsDatabaseName:
+        title: "Database Name"
+        type: string
+        default: movies_db
+      actorsServerName:
+        title: "Debezium Server Name"
+        description: "Logical server name for the Debezium connector"
+        type: string
+        default: actors_pg
+      actorsSlotName:
+        title: "Replication Slot Name"
+        description: "Name of the PostgreSQL replication slot"
+        type: string
+        default: actors_cdc_slot
+  dependencies:
+    - "camel:core"
+    - "camel:groovy"
+    - "camel:debezium-postgres"
+  template:
+    beans:
+      - name: pgOffsetStore
+        type: "#class:org.apache.kafka.connect.storage.MemoryOffsetBackingStore"
+    from:
+      uri: "debezium-postgres:{{actorsServerName}}"
+      parameters:
+        databaseHostname: "{{actorsDatabaseHost}}"
+        databasePort: "{{actorsDatabasePort}}"
+        databaseUser: "{{actorsDatabaseUser}}"
+        databasePassword: "{{actorsDatabasePassword}}"
+        databaseDbname: "{{actorsDatabaseName}}"
+        databaseServerName: "{{actorsServerName}}"
+        tableIncludeList: "public.actors"
+        pluginName: pgoutput
+        slotName: "{{actorsSlotName}}"
+        slotStrategy: "databaseserver"
+        offsetStorage: "#bean:pgOffsetStore"
+        debezium.max.queue.size: 16384
+        provideTransactionMetadata: true
+      steps:
+        - to: kamelet:sink

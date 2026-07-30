@@ -1,0 +1,152 @@
+# ---------------------------------------------------------------------------
+# groovy-cdc-processor — Charlie, 2026
+#
+# Pipeline processor for Debezium CDC change events.  Receives a change
+# event for the movies table, extracts the operation type (c/r/u/d), and:
+#
+#   c (create) / r (snapshot read) / u (update)
+#     → queries the actors table via SQL, builds a joined JSON document
+#     → sets CamelEsOperation=INDEX and indexId for upsert
+#
+#   d (delete)
+#     → sets CamelEsOperation=DELETE and indexId for removal
+#
+# All logic is powered by Groovy — including the Debezium event parsing,
+# the SQL query construction, and the JSON document building.
+# ---------------------------------------------------------------------------
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: groovy-cdc-processor
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+  annotations:
+    camel.apache.org/provider: "Apache Software Foundation"
+    camel.apache.org/kamelet.group: "Processing"
+    camel.apache.org/kamelet.namespace: "CDC"
+spec:
+  definition:
+    title: "Groovy CDC Processor"
+    description: |-
+      Processes Debezium change events for the movies table.
+      For create/update events, queries the actors table and produces
+      a joined JSON document.  For delete events, instructs the ES
+      sink to remove the document.
+    required:
+      - actorsJdbcUrl
+    properties:
+      actorsJdbcUrl:
+        title: Actors JDBC URL
+        description: JDBC URL for the PostgreSQL actors database
+        type: string
+        example: jdbc:postgresql://postgres.default.svc:5432/movies_db
+      actorsDbUser:
+        title: Actors DB User
+        type: string
+        default: postgres
+      actorsDbPassword:
+        title: Actors DB Password
+        type: string
+        default: ""
+        format: password
+  dependencies:
+    - "camel:core"
+    - "camel:sql"
+    - "camel:groovy"
+    - "mvn:org.postgresql:postgresql:42.7.4"
+    - "mvn:org.apache.commons:commons-dbcp2:2.14.0"
+  template:
+    beans:
+      - name: actorsDb
+        type: "#class:org.apache.commons.dbcp2.BasicDataSource"
+        properties:
+          url: "{{actorsJdbcUrl}}"
+          username: "{{actorsDbUser}}"
+          password: "{{actorsDbPassword}}"
+          driverClassName: "org.postgresql.Driver"
+          initialSize: 2
+          maxTotal: 10
+    from:
+      uri: kamelet:source
+      steps:
+        # -- parse the Debezium change event ---------------------------------
+        - setProperty:
+            name: cdcOp
+            groovy: "body['op']"
+        - setProperty:
+            name: cdcAfter
+            groovy: "body['after']"
+        - setProperty:
+            name: cdcBefore
+            groovy: "body['before']"
+
+        # -- route by operation type -----------------------------------------
+        - choice:
+            when:
+              - groovy: "exchange.getProperty('cdcOp') == 'd'"
+                steps:
+                  # DELETE: extract movieId from the before-image, tell ES to
+                  #         delete the document
+                  - setHeader:
+                      name: CamelEsOperation
+                      constant: "DELETE"
+                  - setHeader:
+                      name: indexId
+                      groovy: "exchange.getProperty('cdcBefore')['id']"
+                  - setBody:
+                      constant: ""
+
+              - groovy: "exchange.getProperty('cdcOp') == 'c' || exchange.getProperty('cdcOp') == 'r' || exchange.getProperty('cdcOp') == 'u'"
+                steps:
+                  # CREATE / SNAPSHOT-READ / UPDATE: extract movie fields
+                  - setProperty:
+                      name: movieId
+                      groovy: "exchange.getProperty('cdcAfter')['id']"
+                  - setProperty:
+                      name: movieTitle
+                      groovy: "exchange.getProperty('cdcAfter')['title']"
+                  - setProperty:
+                      name: movieYear
+                      groovy: "exchange.getProperty('cdcAfter')['release_year']"
+                  - setProperty:
+                      name: movieGenre
+                      groovy: "exchange.getProperty('cdcAfter')['genre']"
+
+                  # -- query actors via Groovy-built SQL --------------------
+                  - setBody:
+                      groovy: |
+                        "SELECT id, name, character_name FROM actors WHERE movie_id = '" +
+                          exchange.getProperty('movieId') + "'"
+                  - to:
+                      uri: "sql:."
+                      parameters:
+                        dataSource: "#bean:actorsDb"
+                        outputType: SelectList
+                        useMessageBodyForSql: true
+
+                  # -- store actor rows as property -------------------------
+                  - setProperty:
+                      name: actorsList
+                      groovy: "body"
+
+                  # -- build joined JSON with Groovy JsonOutput -------------
+                  - setBody:
+                      groovy: |
+                        groovy.json.JsonOutput.toJson([
+                          movieId: exchange.getProperty('movieId'),
+                          title: exchange.getProperty('movieTitle'),
+                          year: exchange.getProperty('movieYear') as Integer,
+                          genre: exchange.getProperty('movieGenre'),
+                          actors: exchange.getProperty('actorsList')
+                        ])
+
+                  # -- set ES headers for upsert ----------------------------
+                  - setHeader:
+                      name: CamelEsOperation
+                      constant: "INDEX"
+                  - setHeader:
+                      name: indexId
+                      groovy: "exchange.getProperty('movieId')"
+
+        # -- forward to the elasticsearch-index-sink -----------------------
+        - to: kamelet:sink

@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------------------
+# movies-cdc-source — Alice, 2024
+#
+# First attempt at CDC.  Uses the Debezium Camel component to tap into
+# PostgreSQL's logical replication stream.  Watches the movies table for
+# inserts, updates, and deletes and emits each change event downstream.
+#
+# No polling.  No cron.  Just a streaming replication slot.
+# ---------------------------------------------------------------------------
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: movies-cdc-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Movies CDC Source"
+    description: Streams change events from the PostgreSQL movies table via Debezium
+    required:
+      - dbHost
+      - dbPassword
+    properties:
+      dbHost:
+        type: string
+        example: postgres.default.svc
+      dbPort:
+        type: string
+        default: "5432"
+      dbUser:
+        type: string
+        default: postgres
+      dbPassword:
+        type: string
+        format: password
+      dbName:
+        type: string
+        default: movies_db
+      serverName:
+        type: string
+        default: movies_pg
+      tableInclude:
+        type: string
+        default: public.movies
+  dependencies:
+    - "camel:core"
+    - "camel:groovy"
+    - "camel:debezium-postgres"
+  template:
+    from:
+      uri: "debezium-postgres:{{serverName}}"
+      parameters:
+        databaseHostname: "{{dbHost}}"
+        databasePort: "{{dbPort}}"
+        databaseUser: "{{dbUser}}"
+        databasePassword: "{{dbPassword}}"
+        databaseDbname: "{{dbName}}"
+        databaseServerName: "{{serverName}}"
+        tableIncludeList: "{{tableInclude}}"
+        pluginName: pgoutput
+        slotName: "movies_cdc_slot"
+        slotStrategy: "databaseserver"
+        offsetStorage: "org.apache.kafka.connect.storage.MemoryOffsetBackingStore"
+        debezium.max.queue.size: 8192
+      steps:
+        - to: kamelet:sink
