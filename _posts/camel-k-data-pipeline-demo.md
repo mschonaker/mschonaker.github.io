@@ -535,7 +535,9 @@ Solutions:
 
 2. **Full re-index on schedule** — Delete the ES index nightly and let the next poll rebuild everything from scratch. The `indexId` header ensures the same 50 IDs are recreated.
 
-3. **CDC (Change Data Capture)** — Instead of polling, listen to the database's binary log (binlog) for insert/update/delete events. This is the production-grade approach, covered in a follow-up post.
+3. **CDC (Change Data Capture)** — Instead of polling, listen to the database's change stream for insert/update/delete events. Debezium reads PostgreSQL's logical replication slot (`pgoutput` plugin) and emits an event for every row change, including deletions. No polling, no stale documents, sub-second latency.
+
+   H2 does **not** support this — H2 has no WAL, no logical replication, no binlog. Real CDC requires PostgreSQL or MySQL. The follow-up post will replace H2 with PostgreSQL and use the Camel K `debezium-postgresql-source` Kamelet to stream changes through a Groovy processor that handles `create`/`update`/`delete` operations natively.
 
 ### Why not redeploy?
 
@@ -559,7 +561,7 @@ Change Data Capture becomes necessary when:
 - You need an audit trail of all changes
 - The database is shared and you cannot add soft-delete columns
 
-**That is the topic of the next post.** Stay tuned for a CDC-based pipeline using Debezium and Camel K.
+**That is the topic of the next post.** PostgreSQL, Debezium, and a Groovy-powered CDC processor that handles deletes cleanly. No polling, no stale documents.
 
 ## The Debugging Journey
 
