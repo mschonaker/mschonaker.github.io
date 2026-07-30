@@ -334,6 +334,9 @@ spec:
                 genre: exchange.getProperty('movieGenre'),
                 actors: exchange.getProperty('actorsList')
               ])
+        - setHeader:
+            name: indexId
+            groovy: "exchange.getProperty('movieId')"
         - to: kamelet:sink
 ```
 
@@ -344,6 +347,8 @@ This Kamelet does three things with Groovy:
 3. **Constructs the joined JSON** — `setBody` with `groovy.json.JsonOutput.toJson()` that builds a proper JSON document with the actors array embedded
 
 No Simple expressions. No string-concatenated JSON. Just Groovy code building Groovy data structures and serialising them with the standard library.
+
+Before forwarding the joined document, the Kamelet sets the `indexId` header to the movie's ID. This tells the Elasticsearch sink to upsert — update the document if it already exists, create it if it does not. Without this header, every poll cycle would create duplicate documents. With it, the pipeline is **idempotent**: running it once or a hundred times produces the same set of 50 ES documents.
 
 ### 4. elasticsearch-index-sink — pre-existing infrastructure
 
@@ -399,6 +404,109 @@ spec:
 Note how the Pipe uses the `steps` array to insert the `groovy-join` processor between the source and the sink. Each Kamelet receives only the properties it needs — `movies-source` gets the movies database URL, `groovy-join` gets the actors database URL, and the sink gets the Elasticsearch connection details.
 
 Elasticsearch is not configured here — it is referenced as an existing service at `elasticsearch:9200`. The infrastructure team manages the ES cluster; this pipeline merely indexes into it.
+
+## Running the Pipeline
+
+### Deploy to Kubernetes
+
+The `setup.sh` script automates the full deployment on a minikube cluster:
+
+```bash
+# From the project root
+cd _code/camel-k-movies-actors
+./setup.sh
+```
+
+This script:
+
+1. Starts minikube with the registry addon
+2. Installs the Camel K operator (if not already present)
+3. Configures the IntegrationPlatform registry address
+4. Deploys pre-existing infrastructure (Elasticsearch cluster + ES sink Kamelet)
+5. Deploys the H2 movies and actors databases with seed data
+6. Applies the pipeline Kamelets (`movies-source`, `groovy-join`)
+7. Applies the Pipe (`movies-actors-to-es`)
+
+### Check the pipeline status
+
+```bash
+# List all Kamelets in the namespace
+kubectl get kamelet -n default
+
+# Check the Pipe status
+kubectl get pipe -n default
+
+# Check the Integration status
+kubectl get integration -n default -o wide
+
+# View pod logs for the running integration
+kubectl logs -l camel.apache.org/integration=movies-actors-to-es -n default --tail=50
+```
+
+When the Pipe is ready, its status phase changes to `Ready` and a new integration pod starts running.
+
+### Verify Elasticsearch data
+
+```bash
+# List ES indices
+kubectl exec deploy/elasticsearch -n default -- curl -s http://localhost:9200/_cat/indices?v
+
+# Count documents in the joined index
+kubectl exec deploy/elasticsearch -n default -- curl -s 'http://localhost:9200/movies-actors-joined/_count' | python3 -c "import sys,json; print(json.load(sys.stdin).get('count', 'N/A'))"
+
+# View sample documents
+kubectl exec deploy/elasticsearch -n default -- curl -s 'http://localhost:9200/movies-actors-joined/_search?pretty&size=2'
+```
+
+Expect 50 documents — one per movie — each with an embedded `actors` array.
+
+### Re-run the pipeline
+
+Because the pipeline sets the `indexId` header to the movie ID, Elasticsearch upserts documents instead of creating duplicates. You can safely re-run by deleting the index and waiting for the next poll cycle:
+
+```bash
+# Delete the index (clears all joined documents)
+kubectl exec deploy/elasticsearch -n default -- curl -s -X DELETE 'http://localhost:9200/movies-actors-joined'
+
+# The integration will re-create all 50 documents on the next poll (within 30 seconds)
+```
+
+To restart the integration itself:
+
+```bash
+kubectl delete integration movies-actors-to-es -n default
+```
+
+The Pipe will recreate the integration automatically.
+
+### Debug common issues
+
+| Symptom | Likely cause | Check |
+|---------|-------------|-------|
+| No documents in ES | Poll period not yet elapsed | Wait 30 seconds, check integration logs |
+| Integration pod stuck in `Building` | Registry address misconfigured | Check `IntegrationPlatform` registry address |
+| `NoSuchBeanException` | Bean suffixing in dynamic `toD` URIs | Use `sql:.` with `useMessageBodyForSql: true` |
+| Pipe stays in `Phase: None` | Kamelet type mismatch | Verify `groovy-join` uses `type: sink` |
+
+### Run locally without Kubernetes
+
+For local development, use the Docker Compose setup and Camel JBang:
+
+```bash
+cd _code/camel-k-movies-actors
+
+# Start H2 databases and Elasticsearch
+docker compose up -d
+
+# Run the pipeline locally via Camel JBang
+jbang camel@apache/camel run \
+  kamelets/movies-source.kamelet.yaml \
+  kamelets/groovy-join.kamelet.yaml \
+  kamelets/elasticsearch-index-sink.kamelet.yaml \
+  pipes/movies-actors-pipe.yaml
+```
+
+This runs the same Kamelets and Pipe configuration outside Kubernetes, which is useful for fast iteration. The `local/movies-actors-route.yaml` file provides an equivalent standalone route that predates the multi-Kamelet architecture.
 
 ## The Debugging Journey
 
@@ -490,6 +598,8 @@ After the integration is running and a poll cycle completes, Elasticsearch conta
 ```
 
 Note that the actors array is built natively by Groovy's `JsonOutput.toJson()` — no string interpolation, no manual JSON construction.
+
+Re-run the verification as many times as you like. The `indexId` header ensures Elasticsearch upserts, so you always see exactly 50 documents — never duplicates.
 
 ## Key Takeaways
 

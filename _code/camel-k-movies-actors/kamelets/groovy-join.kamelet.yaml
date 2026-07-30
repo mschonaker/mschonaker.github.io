@@ -94,5 +94,10 @@ spec:
                 actors: exchange.getProperty('actorsList')
               ])
 
+        # -- set indexId so ES-upserts instead of creating duplicates --------
+        - setHeader:
+            name: indexId
+            groovy: "exchange.getProperty('movieId')"
+
         # -- forward to the next step (elasticsearch-index-sink) -------------
         - to: kamelet:sink
