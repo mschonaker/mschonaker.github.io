@@ -1,5 +1,45 @@
 [
   {
+    "id": "bento-conduit-cdc-pipeline",
+    "type": "article",
+    "file": "_posts/bento-conduit-cdc-pipeline-demo.md",
+    "timestamp": 1785542400,
+    "summary": "A CDC-powered pipeline with no message broker — Conduit streams PostgreSQL logical replication changes to a plain JSONL bridge file, and Bento tails the file, joins actors, and indexes enriched documents into Elasticsearch. Deletes propagate, stale documents are gone.",
+    "image": "/images/bento-conduit-cdc-header.png"
+  },
+  {
+    "id": "camel-k-cdc-pipeline",
+    "type": "article",
+    "file": "_posts/camel-k-cdc-pipeline-demo.md",
+    "timestamp": 1785456000,
+    "summary": "A CDC-powered evolution of the Camel K ETL pipeline — replacing H2 polling with PostgreSQL logical replication and Debezium, with a Groovy processor that handles creates, updates, and deletes natively. Stale documents are a thing of the past.",
+    "image": "/images/camel-k-data-pipeline-header.png"
+  },
+  {
+    "id": "camel-k-pipeline",
+    "type": "article",
+    "file": "_posts/camel-k-data-pipeline-demo.md",
+    "timestamp": 1785196800,
+    "summary": "A practical end-to-end demonstration of Apache Camel K on Kubernetes, using separate vintage-styled Kamelets for two H2 databases and a Groovy-powered join processor to index joined movie-actor documents into Elasticsearch.",
+    "image": "/images/camel-k-data-pipeline-header.png"
+  },
+  {
+    "id": "maven003",
+    "type": "article",
+    "file": "_posts/maven-release-trunk-based-development.md",
+    "timestamp": 1785024000,
+    "summary": "Extend the automation from Automating Maven Releases with GitHub Actions with a trunk-based branching model — major/minor releases from main, patch releases from release branches, all automated.",
+    "image": "/images/maven-trunk-based-development.png"
+  },
+  {
+    "id": "maven002",
+    "type": "article",
+    "file": "_posts/maven-release-github-actions.md",
+    "timestamp": 1784937600,
+    "summary": "Automate the release process from Understanding Maven's Release Lifecycle — deploy SNAPSHOTs on every push and cut releases with a single button click.",
+    "image": "/images/maven-release-automation.png"
+  },
+  {
     "id": "graalvm-quarkus-hello",
     "type": "article",
     "file": "_posts/graalvm-quarkus-docker-hello.md",
@@ -118,13 +158,5 @@
     "timestamp": 1743206400,
     "summary": "How to build and run the latest Zig compiler from source inside a Docker container.",
     "image": null
-  },
-  {
-    "id": "camel-k-pipeline",
-    "type": "article",
-    "file": "_posts/camel-k-data-pipeline-demo.md",
-    "timestamp": 1785291788,
-    "summary": "An end-to-end ETL pipeline with Apache Camel K on Kubernetes: reading from two H2 databases, joining data in-flight, and indexing into Elasticsearch — including debugging lessons.",
-    "image": "/images/camel-k-data-pipeline-header.png"
   }
 ]

@@ -1,0 +1,46 @@
+http:
+  address: 0.0.0.0:4196
+
+input:
+  file_tail:
+    path: ./bridge/cdc-events.jsonl
+
+pipeline:
+  processors:
+    - switch:
+        - check: this.operation == "delete" && this.metadata."opencdc.collection" == "movies"
+          processors:
+            - mapping: |
+                meta es_action = "delete"
+                root.movieId = this.payload.before.id
+
+        - check: (this.operation == "create" || this.operation == "update" || this.operation == "snapshot") && this.metadata."opencdc.collection" == "movies"
+          processors:
+            - mapping: |
+                meta es_action = "index"
+                meta movie_id = this.payload.after.id
+                meta movie_title = this.payload.after.title
+                meta movie_year = this.payload.after.release_year
+                meta movie_genre = this.payload.after.genre
+                root = this
+
+            - sql_raw:
+                driver: postgres
+                dsn: "postgres://postgres:postgres@localhost:5432/movies_db?sslmode=disable"
+                query: "SELECT id, name, character_name FROM actors WHERE movie_id = $1"
+                args_mapping: |
+                  root = [ meta("movie_id") ]
+
+            - mapping: |
+                root.movieId = meta("movie_id")
+                root.title = meta("movie_title")
+                root.year = meta("movie_year")
+                root.genre = meta("movie_genre")
+                root.actors = this
+
+output:
+  elasticsearch_v2:
+    urls: ["http://localhost:9200"]
+    index: movies-actors-joined
+    id: ${! json("movieId") }
+    action: ${! meta("es_action") }

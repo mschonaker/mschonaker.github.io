@@ -1,0 +1,24 @@
+version: 2.2
+pipelines:
+  - id: movies-cdc
+    status: running
+    description: >-
+      Streams change events from the PostgreSQL movies table via logical
+      replication and writes them to the bridge file consumed by Bento.
+    connectors:
+      - id: movies-source
+        type: source
+        plugin: builtin:postgres
+        settings:
+          url: "postgres://postgres:postgres@localhost:5432/movies_db?sslmode=disable"
+          tables: "movies"
+          cdcMode: "logrepl"
+          logrepl.publicationName: "movies_pub"
+          logrepl.slotName: "movies_slot"
+          snapshotMode: "initial"
+      - id: cdc-bridge
+        type: destination
+        plugin: builtin:file
+        settings:
+          path: "./bridge/cdc-events.jsonl"
+          sdk.record.format: "opencdc/json"

@@ -1,0 +1,87 @@
+config:
+  # global conduit configuration file
+  path: ./conduit.yaml
+db:
+  # database type; accepts badger,postgres,inmemory,sqlite
+  type: badger
+  badger:
+    # path to badger DB
+    path: ./conduit.db
+  postgres:
+    # postgres table in which to store data (will be created if it does not exist)
+    table: conduit_kv_store
+  sqlite:
+    # path to sqlite3 DB
+    path: ./conduit.db
+    # sqlite3 table in which to store data (will be created if it does not exist)
+    table: conduit_kv_store
+api:
+  # enable HTTP and gRPC API
+  enabled: true
+  http:
+    # address for serving the HTTP API
+    address: :8080
+    cors:
+      # allowed browser CORS origins for the HTTP API and websocket streams; repeatable; exact scheme://host[:port] (no trailing slash). '*' allows any origin but is refused on a non-loopback bind (unauthenticated network-wide access); use exact origins for network deployments
+      allowed-origins: []
+    ui:
+      # serve the built-in web UI at '/' (observe + operate); the SPA is always embedded in the binary, this only gates the route — disabling removes the surface, not the binary size
+      enabled: true
+  grpc:
+    # address for serving the gRPC API
+    address: :8084
+  # allow ApplyPipeline to apply a restart-class change to a running pipeline (Tier-1 operator authorization; see docs/operations/live-restart-apply.md)
+  allow-live-restart-apply: false
+log:
+  # sets logging level; accepts debug, info, warn, error, trace
+  level: info
+  # sets the format of the logging; accepts json, cli
+  format: cli
+connectors:
+  # path to standalone connectors' directory
+  path: ./connectors
+  # maximum size of a processed record in bytes for standalone connectors
+  max-receive-record-size: 4194304
+install:
+  # operator policy: permit --allow-unsigned connector installs at all (false hard-disables regardless of flag/TTY/env var)
+  allow-unsigned: false
+  # maximum age of a verified registry index before it is considered stale
+  max-staleness: 168h0m0s
+  # operator policy: permit --allow-stale-bundle offline connector installs at all (false hard-disables regardless of flag/TTY/env var)
+  allow-stale-bundle: false
+processors:
+  # path to standalone processors' directory
+  path: ./processors
+pipelines:
+  # path to a pipelines' directory or a pipeline configuration file
+  path: ./pipelines
+  # exit Conduit if a pipeline is degraded
+  exit-on-degraded: false
+  error-recovery:
+    # minimum delay before restart
+    min-delay: 1s
+    # maximum delay before restart
+    max-delay: 10m0s
+    # backoff factor applied to the last delay
+    backoff-factor: 2
+    # maximum number of retries
+    max-retries: -1
+    # amount of time running without any errors after which a pipeline is considered healthy
+    max-retries-window: 5m0s
+schema-registry:
+  # schema registry type; accepts builtin,confluent
+  type: builtin
+  confluent:
+    auth:
+      # schema registry authentication type; accepts none,basic,bearer
+      type: none
+preview:
+  # enables experimental pipeline architecture v2 (note that the new architecture currently supports only 1 source and 1 destination per pipeline)
+  pipeline-arch-v2: false
+  # disables metrics about amount of data (in bytes) moved in pipeline architecture v2 (increases performance)
+  pipeline-arch-v2-disable-metrics: false
+dev:
+  # watch pipelines.path and hot-reload changes into the running engine (see 'conduit run --dev')
+  enabled: false
+  # emit dev-watcher apply events as JSON lines instead of human-readable text
+  json: false
