@@ -1,5 +1,13 @@
 [
   {
+    "id": "quarkus-onion-architecture",
+    "type": "article",
+    "file": "_posts/quarkus-onion-architecture.md",
+    "timestamp": 1786060800,
+    "summary": "Refactor a plain Java hello world into a full Onion Architecture — domain, application, an existing CLI consumer, and Quarkus as an optional second consumer — with ArchUnit guarding every step so the boundary never silently rots.",
+    "image": "/images/quarkus-onion-header.png"
+  },
+  {
     "id": "bento-conduit-cdc-pipeline",
     "type": "article",
     "file": "_posts/bento-conduit-cdc-pipeline-demo.md",
