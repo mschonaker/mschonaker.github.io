@@ -1,5 +1,13 @@
 [
   {
+    "id": "quarkus-onion-io",
+    "type": "article",
+    "file": "_posts/quarkus-onion-io.md",
+    "timestamp": 1786233600,
+    "summary": "Grow the onion from Part 1 with the I/O the real world demands — JSON POST bodies, an HTML table view, Server-Sent Events, and multipart CSV uploads — and watch every single format land in the adapter ring. The Part 1 rules survive untouched, and one new ArchUnit rule turns the article's thesis — I/O formats are adapter concerns — into a build guard.",
+    "image": "/images/quarkus-onion-io-header.png"
+  },
+  {
     "id": "quarkus-onion-architecture",
     "type": "article",
     "file": "_posts/quarkus-onion-architecture.md",

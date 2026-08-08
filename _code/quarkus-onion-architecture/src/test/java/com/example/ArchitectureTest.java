@@ -4,6 +4,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.onionArchitecture;
 
@@ -24,5 +25,12 @@ class ArchitectureTest {
             .that().resideInAnyPackage("com.example.domain..", "com.example.application..")
             .should().dependOnClassesThat()
             .resideInAnyPackage("jakarta..", "io.quarkus..", "com.example.infrastructure..")
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule format_adapters_are_adapter_concerns = classes()
+            .that().haveSimpleNameEndingWith("View")
+            .or().haveSimpleNameEndingWith("Parser")
+            .should().resideInAPackage("com.example.infrastructure..")
             .allowEmptyShould(true);
 }
