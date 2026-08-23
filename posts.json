@@ -1,5 +1,13 @@
 [
   {
+    "id": "es-bert-sentiment",
+    "type": "article",
+    "file": "_posts/es-bert-sentiment-model.md",
+    "timestamp": 1787356800,
+    "summary": "Fine-tune a 1M-parameter BERT from random weights on SST-2, load it into Elasticsearch 9.x with Eland, and enrich documents at indexing time.",
+    "image": "/images/es-bert-sentiment-header.png"
+  },
+  {
     "id": "quarkus-onion-io",
     "type": "article",
     "file": "_posts/quarkus-onion-io.md",
