@@ -1,10 +1,18 @@
 [
   {
+    "id": "llm-era-custom-language",
+    "type": "article",
+    "file": "_posts/llm-era-custom-language.md",
+    "timestamp": 1789257600,
+    "summary": "Build a tiny scripting language — hand-written lexer, LALR grammar compiled by jacc, JVM bytecode generated with ASM — in one afternoon on Java 21, and ask whether LLMs make custom compilers dead or inevitable.",
+    "image": "/images/llm-era-custom-language-header.png"
+  },
+  {
     "id": "es-bert-sentiment",
     "type": "article",
     "file": "_posts/es-bert-sentiment-model.md",
     "timestamp": 1787356800,
-    "summary": "Fine-tune a 1M-parameter BERT from random weights on SST-2, load it into Elasticsearch 9.x with Eland, and enrich documents at indexing time.",
+    "summary": "Train a 1M-parameter BERT from random weights on your own labeled CSV, load it into Elasticsearch 9.x with Eland, and enrich documents at indexing time.",
     "image": "/images/es-bert-sentiment-header.png"
   },
   {

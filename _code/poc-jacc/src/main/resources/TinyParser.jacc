@@ -1,0 +1,88 @@
+%{
+import java.util.ArrayList;
+import java.util.List;
+%}
+
+%package com.example
+%class TinyParser
+%interface TinyTokens
+%semantic Object : lexer.getSemanticValue()
+
+%token <Integer> NUMBER
+%token <String> IDENTIFIER
+%token IF WHILE
+
+%right '='
+%left '+' '-'
+%left '<' '>'
+
+%type <AST.Stmt> stmt block
+%type <AST.Program> program
+%type <AST.Expr> expr
+%type <List> stmt_list
+
+%next lexer.nextToken()
+
+%%
+
+program   : stmt_list expr           { root = new AST.Program($1, $2); }
+          | expr                     { root = new AST.Program(new ArrayList<>(), $1); }
+          ;
+
+stmt_list : stmt                     { var list = new ArrayList<AST.Stmt>(); list.add($1); $$ = list; }
+          | stmt_list stmt           { $1.add($2); $$ = $1; }
+          ;
+
+stmt      : IDENTIFIER '=' expr ';'  { $$ = new AST.Assign($1, $3); }
+          | IF '(' expr ')' stmt     { $$ = new AST.If($3, $5); }
+          | WHILE '(' expr ')' stmt  { $$ = new AST.While($3, $5); }
+          | '{' block '}'            { $$ = $2; }
+          ;
+
+block     : stmt_list                { $$ = new AST.Block($1); }
+          | /* empty */              { $$ = new AST.Block(new ArrayList<>()); }
+          ;
+
+expr      : NUMBER                   { $$ = new AST.Num($1); }
+          | IDENTIFIER               { $$ = new AST.Var($1); }
+          | expr '+' expr            { $$ = new AST.BinOp('+', $1, $3); }
+          | expr '-' expr            { $$ = new AST.BinOp('-', $1, $3); }
+          | expr '<' expr            { $$ = new AST.BinOp('<', $1, $3); }
+          | expr '>' expr            { $$ = new AST.BinOp('>', $1, $3); }
+          | '(' expr ')'             { $$ = $2; }
+          ;
+
+%%
+ 
+    /** Lexer supplying tokens to this generated parser. */
+    private TinyLexer lexer;
+
+    /** Root of the parsed program, set once {@link #parse()} succeeds. */
+    private AST.Program root;
+
+    /**
+     * Creates a parser that reads tokens from the given lexer.
+     *
+     * <p>The lexer must already be primed with one call to
+     * {@link TinyLexer#nextToken()} before {@link #parse()} is invoked.
+     *
+     * @param lexer the token source
+     */
+    public TinyParser(TinyLexer lexer) {
+        this.lexer = lexer;
+    }
+
+    /**
+     * Returns the parsed program.
+     *
+     * @return the parsed program, valid only after {@link #parse()} returns
+     *         {@code true}
+     */
+    public AST.Program getRoot() {
+        return root;
+    }
+
+    private void yyerror(String msg) {
+        throw new RuntimeException("Parser error: " + msg);
+    }
+
