@@ -3,6 +3,7 @@ id: pca-knn
 title: Shrinking Embeddings: PCA Versus Elasticsearch's Built-In Quantization
 summary: Project MiniLM vectors from 384 to 128, 64, and 32 dimensions with a hand-run PCA and compare recall, latency, and storage against Better Binary Quantization on the same kNN index.
 date: 2026-09-20
+tags: elasticsearch, ml
 image: /images/pca-knn.jpg
 ---
 

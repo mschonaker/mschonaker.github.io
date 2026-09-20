@@ -1,11 +1,29 @@
 [
   {
+    "id": "pca-knn",
+    "type": "article",
+    "file": "_posts/pca-knn.md",
+    "timestamp": 1789862400,
+    "summary": "Project MiniLM vectors from 384 to 128, 64, and 32 dimensions with a hand-run PCA and compare recall, latency, and storage against Better Binary Quantization on the same kNN index.",
+    "image": "/images/pca-knn.jpg",
+    "tags": [
+      "elasticsearch",
+      "ml"
+    ]
+  },
+  {
     "id": "es-knn-quarkus",
     "type": "article",
     "file": "_posts/es-knn-quarkus.md",
     "timestamp": 1789776000,
     "summary": "Embed 10,000 Algolia products with the pure-Java MiniLM pipeline, bulk-index the vectors into Elasticsearch dense_vector fields, and serve kNN search from a small Quarkus application.",
-    "image": "/images/es-knn-quarkus.jpg"
+    "image": "/images/es-knn-quarkus.jpg",
+    "tags": [
+      "elasticsearch",
+      "ml",
+      "quarkus",
+      "java"
+    ]
   },
   {
     "id": "java-onnx-embeddings",
@@ -13,15 +31,12 @@
     "file": "_posts/java-onnx-embeddings.md",
     "timestamp": 1789776000,
     "summary": "The MiniLM-L6-v2 pipeline with no native build step: official ONNX Runtime Java, Hugging Face tokenizers through DJL, validated value-for-value against a Python reference, plus batched inference.",
-    "image": "/images/java-onnx-embeddings.jpg"
-  },
-  {
-    "id": "pca-knn",
-    "type": "article",
-    "file": "_posts/pca-knn.md",
-    "timestamp": 1789873200,
-    "summary": "Project MiniLM vectors from 384 to 128, 64, and 32 dimensions with a hand-run PCA and compare recall, latency, and storage against Better Binary Quantization on the same kNN index.",
-    "image": "/images/pca-knn.jpg"
+    "image": "/images/java-onnx-embeddings.jpg",
+    "tags": [
+      "java",
+      "ml",
+      "onnx"
+    ]
   },
   {
     "id": "llm-era-custom-language",
@@ -29,7 +44,12 @@
     "file": "_posts/llm-era-custom-language.md",
     "timestamp": 1789257600,
     "summary": "Build a tiny scripting language — hand-written lexer, LALR grammar compiled by jacc, JVM bytecode generated with ASM — in one afternoon on Java 21, and ask whether LLMs make custom compilers dead or inevitable.",
-    "image": "/images/llm-era-custom-language-header.jpg"
+    "image": "/images/llm-era-custom-language-header.jpg",
+    "tags": [
+      "compilers",
+      "llm",
+      "java"
+    ]
   },
   {
     "id": "es-bert-sentiment",
@@ -37,7 +57,12 @@
     "file": "_posts/es-bert-sentiment-model.md",
     "timestamp": 1787356800,
     "summary": "Train a 1M-parameter BERT from random weights on your own labeled CSV, load it into Elasticsearch 9.x with Eland, and enrich documents at indexing time.",
-    "image": "/images/es-bert-sentiment-header.jpg"
+    "image": "/images/es-bert-sentiment-header.jpg",
+    "tags": [
+      "elasticsearch",
+      "ml",
+      "python"
+    ]
   },
   {
     "id": "quarkus-onion-io",
@@ -45,7 +70,12 @@
     "file": "_posts/quarkus-onion-io.md",
     "timestamp": 1786233600,
     "summary": "Grow the onion from Part 1 with the I/O the real world demands — JSON POST bodies, an HTML table view, Server-Sent Events, and multipart CSV uploads — and watch every single format land in the adapter ring. The Part 1 rules survive untouched, and one new ArchUnit rule turns the article's thesis — I/O formats are adapter concerns — into a build guard.",
-    "image": "/images/quarkus-onion-io-header.jpg"
+    "image": "/images/quarkus-onion-io-header.jpg",
+    "tags": [
+      "quarkus",
+      "java",
+      "architecture"
+    ]
   },
   {
     "id": "quarkus-onion-architecture",
@@ -53,7 +83,12 @@
     "file": "_posts/quarkus-onion-architecture.md",
     "timestamp": 1786060800,
     "summary": "Refactor a plain Java hello world into a full Onion Architecture — domain, application, an existing CLI consumer, and Quarkus as an optional second consumer — with ArchUnit guarding every step so the boundary never silently rots.",
-    "image": "/images/quarkus-onion-header.jpg"
+    "image": "/images/quarkus-onion-header.jpg",
+    "tags": [
+      "quarkus",
+      "java",
+      "architecture"
+    ]
   },
   {
     "id": "bento-conduit-cdc-pipeline",
@@ -61,7 +96,12 @@
     "file": "_posts/bento-conduit-cdc-pipeline-demo.md",
     "timestamp": 1785542400,
     "summary": "A CDC-powered pipeline with no message broker — Conduit streams PostgreSQL logical replication changes to a plain JSONL bridge file, and Bento tails the file, joins actors, and indexes enriched documents into Elasticsearch. Deletes propagate, stale documents are gone.",
-    "image": "/images/bento-conduit-cdc-header.jpg"
+    "image": "/images/bento-conduit-cdc-header.jpg",
+    "tags": [
+      "cdc",
+      "data-pipelines",
+      "go"
+    ]
   },
   {
     "id": "camel-k-cdc-pipeline",
@@ -69,7 +109,13 @@
     "file": "_posts/camel-k-cdc-pipeline-demo.md",
     "timestamp": 1785456000,
     "summary": "A CDC-powered evolution of the Camel K ETL pipeline — replacing H2 polling with PostgreSQL logical replication and Debezium, with a Groovy processor that handles creates, updates, and deletes natively. Stale documents are a thing of the past.",
-    "image": "/images/camel-k-data-pipeline-header.jpg"
+    "image": "/images/camel-k-data-pipeline-header.jpg",
+    "tags": [
+      "cdc",
+      "data-pipelines",
+      "camel",
+      "kafka"
+    ]
   },
   {
     "id": "camel-k-pipeline",
@@ -77,7 +123,12 @@
     "file": "_posts/camel-k-data-pipeline-demo.md",
     "timestamp": 1785196800,
     "summary": "A practical end-to-end demonstration of Apache Camel K on Kubernetes, using separate vintage-styled Kamelets for two H2 databases and a Groovy-powered join processor to index joined movie-actor documents into Elasticsearch.",
-    "image": "/images/camel-k-data-pipeline-header.jpg"
+    "image": "/images/camel-k-data-pipeline-header.jpg",
+    "tags": [
+      "data-pipelines",
+      "camel",
+      "kubernetes"
+    ]
   },
   {
     "id": "maven003",
@@ -85,7 +136,11 @@
     "file": "_posts/maven-release-trunk-based-development.md",
     "timestamp": 1785024000,
     "summary": "Extend the automation from Automating Maven Releases with GitHub Actions with a trunk-based branching model — major/minor releases from main, patch releases from release branches, all automated.",
-    "image": "/images/maven-trunk-based-development.jpg"
+    "image": "/images/maven-trunk-based-development.jpg",
+    "tags": [
+      "maven",
+      "github-actions"
+    ]
   },
   {
     "id": "maven002",
@@ -93,7 +148,11 @@
     "file": "_posts/maven-release-github-actions.md",
     "timestamp": 1784937600,
     "summary": "Automate the release process from Understanding Maven's Release Lifecycle — deploy SNAPSHOTs on every push and cut releases with a single button click.",
-    "image": "/images/maven-release-automation.jpg"
+    "image": "/images/maven-release-automation.jpg",
+    "tags": [
+      "maven",
+      "github-actions"
+    ]
   },
   {
     "id": "graalvm-quarkus-hello",
@@ -101,7 +160,14 @@
     "file": "_posts/graalvm-quarkus-docker-hello.md",
     "timestamp": 1784246400,
     "summary": "Build a native Java microservice using GraalVM and Quarkus with a multi-stage Dockerfile — no local GraalVM installation required.",
-    "image": "/images/graalvm-quarkus-header.jpg"
+    "image": "/images/graalvm-quarkus-header.jpg",
+    "tags": [
+      "quarkus",
+      "java",
+      "graalvm",
+      "docker",
+      "maven"
+    ]
   },
   {
     "id": "open-knowledge-format",
@@ -109,7 +175,11 @@
     "file": "_posts/open-knowledge-format.md",
     "timestamp": 1783123200,
     "summary": "\"OKF is an open, vendor-neutral specification for representing knowledge as a directory of markdown files with YAML frontmatter—designed to be authored by people, generated by agents, and consumed by both.\"",
-    "image": "/images/okf-header.jpg"
+    "image": "/images/okf-header.jpg",
+    "tags": [
+      "ai",
+      "agents"
+    ]
   },
   {
     "id": "simd-tokenizer-poc",
@@ -117,7 +187,11 @@
     "file": "_posts/simd-tokenizer-publication.md",
     "timestamp": 1775952000,
     "summary": "A proof-of-concept streaming tokenizer that processes arbitrarily large inputs using just 9KB of memory, achieving 5x speedup over bash baseline.",
-    "image": null
+    "image": null,
+    "tags": [
+      "zig",
+      "simd"
+    ]
   },
   {
     "id": "oidc-agent-identity",
@@ -125,7 +199,12 @@
     "file": "_posts/oidc-agent-identity.md",
     "timestamp": 1775520000,
     "summary": "\"How OpenID Connect is being extended to authenticate, authorize, and delegate credentials for autonomous AI agents—and what a real credential exchange looks like.\"",
-    "image": "/images/oidc-agent-identity-header.jpg"
+    "image": "/images/oidc-agent-identity-header.jpg",
+    "tags": [
+      "security",
+      "ai",
+      "oidc"
+    ]
   },
   {
     "id": "geoip2-zig",
@@ -133,7 +212,11 @@
     "file": "_posts/geoip2-zig.md",
     "timestamp": 1775260800,
     "summary": "A deep dive into implementing binary protocol parsing, Patricia trie traversal, and async I/O in Zig—no external dependencies.",
-    "image": "/images/geoip2-zig-header.jpg"
+    "image": "/images/geoip2-zig-header.jpg",
+    "tags": [
+      "zig",
+      "networking"
+    ]
   },
   {
     "id": "env-fragmentation",
@@ -141,7 +224,11 @@
     "file": "_posts/environment-fragmentation-microservices.md",
     "timestamp": 1747699200,
     "summary": "Why your dev/QA/staging environments turn into a group project and how to fix it.",
-    "image": null
+    "image": null,
+    "tags": [
+      "architecture",
+      "microservices"
+    ]
   },
   {
     "id": "esql001",
@@ -149,7 +236,12 @@
     "file": "_posts/esql-docker-example.md",
     "timestamp": 1747699200,
     "summary": "Running Elasticsearch with SQL support in Docker for quick local development and testing.",
-    "image": null
+    "image": null,
+    "tags": [
+      "elasticsearch",
+      "docker",
+      "observability"
+    ]
   },
   {
     "id": "hexagonal-spring-boot",
@@ -157,7 +249,12 @@
     "file": "_posts/hexagonal-architecture-spring-boot.md",
     "timestamp": 1747699200,
     "summary": "Breaking free from Spring annotations in your core business logic using explicit bean registration.",
-    "image": null
+    "image": null,
+    "tags": [
+      "architecture",
+      "spring",
+      "java"
+    ]
   },
   {
     "id": "tailscale001",
@@ -165,7 +262,11 @@
     "file": "_posts/free-tailscale-iphone-mac.md",
     "timestamp": 1743724800,
     "summary": "Setting up free Tailscale VPN to connect your iPhone and Mac without paying for a server.",
-    "image": null
+    "image": null,
+    "tags": [
+      "networking",
+      "productivity"
+    ]
   },
   {
     "id": "gguf-intro",
@@ -173,7 +274,11 @@
     "file": "_posts/gguf-introduction.md",
     "timestamp": 1743465600,
     "summary": "GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware.",
-    "image": "/images/gguf-header.jpg"
+    "image": "/images/gguf-header.jpg",
+    "tags": [
+      "ai",
+      "llm"
+    ]
   },
   {
     "id": "java-zig-ffi",
@@ -181,7 +286,12 @@
     "file": "_posts/java-zig-ffi.md",
     "timestamp": 1743465600,
     "summary": "Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code.",
-    "image": null
+    "image": null,
+    "tags": [
+      "java",
+      "zig",
+      "ffi"
+    ]
   },
   {
     "id": "simd-zig-intro",
@@ -189,7 +299,11 @@
     "file": "_posts/simd-zig-introduction.md",
     "timestamp": 1743465600,
     "summary": "Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing.",
-    "image": null
+    "image": null,
+    "tags": [
+      "zig",
+      "simd"
+    ]
   },
   {
     "id": "zig-onnx-embeddings",
@@ -197,7 +311,12 @@
     "file": "_posts/zig-onnx-embeddings.md",
     "timestamp": 1743465600,
     "summary": "Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python.",
-    "image": null
+    "image": null,
+    "tags": [
+      "zig",
+      "ml",
+      "onnx"
+    ]
   },
   {
     "id": "maven001",
@@ -205,7 +324,10 @@
     "file": "_posts/maven-release-lifecycle.md",
     "timestamp": 1743292800,
     "summary": "Understanding Maven's release process and how to properly version your Java projects.",
-    "image": null
+    "image": null,
+    "tags": [
+      "maven"
+    ]
   },
   {
     "id": "zig001",
@@ -213,6 +335,10 @@
     "file": "_posts/running-zig-master-in-docker.md",
     "timestamp": 1743206400,
     "summary": "How to build and run the latest Zig compiler from source inside a Docker container.",
-    "image": null
+    "image": null,
+    "tags": [
+      "zig",
+      "docker"
+    ]
   }
 ]

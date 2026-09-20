@@ -3,6 +3,7 @@ id: camel-k-pipeline
 title: Building an ETL Data Pipeline with Apache Camel K
 summary: A practical end-to-end demonstration of Apache Camel K on Kubernetes, using separate vintage-styled Kamelets for two H2 databases and a Groovy-powered join processor to index joined movie-actor documents into Elasticsearch.
 date: 2026-07-28
+tags: data-pipelines, camel, kubernetes
 image: /images/camel-k-data-pipeline-header.jpg
 ---
 

@@ -3,6 +3,7 @@ id: maven001
 title: Understanding Maven's Release Lifecycle
 summary: Understanding Maven's release process and how to properly version your Java projects.
 date: 2025-03-30
+tags: maven
 ---
 
 # Understanding Maven's Release Lifecycle with GitHub Packages

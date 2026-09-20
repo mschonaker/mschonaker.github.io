@@ -81,6 +81,7 @@ async function renderPosts() {
               </a>
               <span class="article-date"> ${formatDate(post.timestamp)}</span>
               ${post.summary ? `<div class="article-summary">${escapeHtml(post.summary)}</div>` : ''}
+              ${tagPills(post.tags)}
             </div>
           </div>
         `;
@@ -111,6 +112,22 @@ function cssHeroTheme(id) {
   return 'hero-theme-' + (hash % 5);
 }
 
+function tagColor(tag) {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = (hash * 31 + tag.charCodeAt(i)) >>> 0;
+  }
+  return hash % 360;
+}
+
+function tagPills(tags) {
+  if (!tags || !tags.length) return '';
+  return '<div class="tag-list">' + tags.map(tag => {
+    const hue = tagColor(tag);
+    return `<span class="tag-pill" style="--pill-hue: ${hue}">${escapeHtml(tag)}</span>`;
+  }).join('') + '</div>';
+}
+
 async function renderArticle(post) {
   try {
     const response = await fetch(post.file);
@@ -136,6 +153,7 @@ async function renderArticle(post) {
                  <h1 class="article-hero-title">${escapeHtml(title)}</h1>
                </div>`}
           <div class="article-date">${formatDate(post.timestamp)}</div>
+          ${tagPills(post.tags)}
           ${html}
         </div>
       </div>

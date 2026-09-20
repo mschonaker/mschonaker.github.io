@@ -3,6 +3,7 @@ id: geoip2-zig
 title: Building a GeoIP2 Service from Scratch in Zig
 summary: A deep dive into implementing binary protocol parsing, Patricia trie traversal, and async I/O in Zig—no external dependencies.
 date: 2026-04-04
+tags: zig, networking
 image: /images/geoip2-zig-header.jpg
 ---
 

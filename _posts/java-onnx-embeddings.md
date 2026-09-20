@@ -3,6 +3,7 @@ id: java-onnx-embeddings
 title: Sentence Embeddings in Pure Java with ONNX Runtime
 summary: The MiniLM-L6-v2 pipeline with no native build step: official ONNX Runtime Java, Hugging Face tokenizers through DJL, validated value-for-value against a Python reference, plus batched inference.
 date: 2026-09-19
+tags: java, ml, onnx
 image: /images/java-onnx-embeddings.jpg
 ---
 

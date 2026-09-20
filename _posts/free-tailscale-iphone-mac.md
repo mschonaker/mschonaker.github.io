@@ -3,6 +3,7 @@ id: tailscale001
 title: How to Blog From Your Phone for Free
 summary: Setting up free Tailscale VPN to connect your iPhone and Mac without paying for a server.
 date: 2025-04-04
+tags: networking, productivity
 ---
 
 # How to Blog From Your Phone for Free

@@ -3,6 +3,7 @@ id: esql001
 title: Getting Started with ES|QL in Docker
 summary: Running Elasticsearch with SQL support in Docker for quick local development and testing.
 date: 2025-05-20
+tags: elasticsearch, docker, observability
 ---
 
 # Getting Started with ES|QL in Docker

@@ -3,6 +3,7 @@ id: llm-era-custom-language
 title: "Custom Languages in the LLM Era: From Grammar to JVM Bytecode"
 summary: Build a tiny scripting language — hand-written lexer, LALR grammar compiled by jacc, JVM bytecode generated with ASM — in one afternoon on Java 21, and ask whether LLMs make custom compilers dead or inevitable.
 date: 2026-09-13
+tags: compilers, llm, java
 image: /images/llm-era-custom-language-header.jpg
 ---
 

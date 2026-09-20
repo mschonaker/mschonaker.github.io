@@ -252,6 +252,29 @@ a:visited {
   line-height: 1.5;
 }
 
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.article-content > .tag-list {
+  margin-top: -14px;
+  margin-bottom: 24px;
+}
+
+.tag-pill {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: hsl(var(--pill-hue) 80% 75%);
+  background: hsl(var(--pill-hue) 60% 40% / 0.18);
+  border: 1px solid hsl(var(--pill-hue) 60% 50% / 0.45);
+}
+
 .article-view {
   padding: 0;
 }

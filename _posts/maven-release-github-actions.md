@@ -4,6 +4,7 @@ title: Automating Maven Releases with GitHub Actions
 summary: Automate the release process from Understanding Maven's Release Lifecycle — deploy SNAPSHOTs on every push and cut releases with a single button click.
 image: /images/maven-release-automation.jpg
 date: 2026-07-25
+tags: maven, github-actions
 ---
 
 # Automating Maven Releases with GitHub Actions

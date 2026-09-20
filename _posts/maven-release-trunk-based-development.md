@@ -4,6 +4,7 @@ title: Trunk-Based Maven Releases with GitHub Actions
 summary: Extend the automation from Automating Maven Releases with GitHub Actions with a trunk-based branching model — major/minor releases from main, patch releases from release branches, all automated.
 image: /images/maven-trunk-based-development.jpg
 date: 2026-07-26
+tags: maven, github-actions
 ---
 
 # Trunk-Based Maven Releases with GitHub Actions

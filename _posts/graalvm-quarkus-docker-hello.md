@@ -3,6 +3,7 @@ id: graalvm-quarkus-hello
 title: Hello World with GraalVM, Quarkus, Maven, and Docker
 summary: Build a native Java microservice using GraalVM and Quarkus with a multi-stage Dockerfile — no local GraalVM installation required.
 date: 2026-07-17
+tags: quarkus, java, graalvm, docker, maven
 image: /images/graalvm-quarkus-header.jpg
 ---
 

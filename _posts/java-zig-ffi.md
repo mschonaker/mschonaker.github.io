@@ -3,6 +3,7 @@ id: java-zig-ffi
 title: Calling Zig from Java using JNR-FFI
 summary: Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code.
 date: 2025-04-01
+tags: java, zig, ffi
 ---
 
 # Calling Zig from Java using JNR-FFI

@@ -3,6 +3,7 @@ id: gguf-intro
 title: An Introduction to GGUF
 summary: GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware.
 date: 2025-04-01
+tags: ai, llm
 image: /images/gguf-header.jpg
 ---
 

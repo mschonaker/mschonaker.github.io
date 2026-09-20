@@ -3,6 +3,7 @@ id: zig-onnx-embeddings
 title: Computing Embeddings in Pure Zig Without Python
 summary: Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python.
 date: 2025-04-01
+tags: zig, ml, onnx
 ---
 
 # Computing Embeddings in Pure Zig Without Python

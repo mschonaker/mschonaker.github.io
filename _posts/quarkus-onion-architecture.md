@@ -3,6 +3,7 @@ id: quarkus-onion-architecture
 title: "From Hello World to Onion Architecture: Refactoring Step by Step With ArchUnit"
 summary: Refactor a plain Java hello world into a full Onion Architecture — domain, application, an existing CLI consumer, and Quarkus as an optional second consumer — with ArchUnit guarding every step so the boundary never silently rots.
 date: 2026-08-07
+tags: quarkus, java, architecture
 image: /images/quarkus-onion-header.jpg
 ---
 

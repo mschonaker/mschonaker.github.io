@@ -49,7 +49,10 @@ const posts = files.map(file => {
     file: `${postsDir}/${file}`,
     timestamp: parseDate(frontMatter.date),
     summary: frontMatter.summary,
-    image: frontMatter.image || null
+    image: frontMatter.image || null,
+    tags: frontMatter.tags
+      ? frontMatter.tags.split(',').map(t => t.trim()).filter(Boolean)
+      : []
   };
 
   return post;
