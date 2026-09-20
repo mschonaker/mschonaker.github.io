@@ -3,7 +3,7 @@ id: es-knn-quarkus
 title: Semantic Product Search with Elasticsearch kNN and Quarkus
 summary: Embed 10,000 Algolia products with the pure-Java MiniLM pipeline, bulk-index the vectors into Elasticsearch dense_vector fields, and serve kNN search from a small Quarkus application.
 date: 2026-09-19
-image: /images/es-knn-quarkus.png
+image: /images/es-knn-quarkus.jpg
 ---
 
 # Semantic Product Search with Elasticsearch kNN and Quarkus

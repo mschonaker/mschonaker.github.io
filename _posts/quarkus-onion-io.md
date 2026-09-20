@@ -3,7 +3,7 @@ id: quarkus-onion-io
 title: "Onion Architecture, Part 2: JSON, HTML, Streams, and File Uploads"
 summary: Grow the onion from Part 1 with the I/O the real world demands — JSON POST bodies, an HTML table view, Server-Sent Events, and multipart CSV uploads — and watch every single format land in the adapter ring. The Part 1 rules survive untouched, and one new ArchUnit rule turns the article's thesis — I/O formats are adapter concerns — into a build guard.
 date: 2026-08-09
-image: /images/quarkus-onion-io-header.png
+image: /images/quarkus-onion-io-header.jpg
 ---
 
 # Onion Architecture, Part 2: JSON, HTML, Streams, and File Uploads

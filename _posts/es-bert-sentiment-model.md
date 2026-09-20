@@ -3,7 +3,7 @@ id: es-bert-sentiment
 title: Train a Tiny Sentiment Model and Deploy It Inside Elasticsearch
 summary: Train a 1M-parameter BERT from random weights on your own labeled CSV, load it into Elasticsearch 9.x with Eland, and enrich documents at indexing time.
 date: 2026-08-22
-image: /images/es-bert-sentiment-header.png
+image: /images/es-bert-sentiment-header.jpg
 ---
 
 # Train a Tiny Sentiment Model and Deploy It Inside Elasticsearch

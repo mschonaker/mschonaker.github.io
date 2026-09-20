@@ -3,7 +3,7 @@ id: oidc-agent-identity
 title: "OIDC-A: The Emerging Standard for AI Agent Identity and Credentials"
 summary: "How OpenID Connect is being extended to authenticate, authorize, and delegate credentials for autonomous AI agents—and what a real credential exchange looks like."
 date: 2026-04-07
-image: /images/oidc-agent-identity-header.png
+image: /images/oidc-agent-identity-header.jpg
 ---
 
 # OIDC-A: The Emerging Standard for AI Agent Identity and Credentials

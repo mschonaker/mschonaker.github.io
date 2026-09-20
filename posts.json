@@ -5,7 +5,7 @@
     "file": "_posts/es-knn-quarkus.md",
     "timestamp": 1789776000,
     "summary": "Embed 10,000 Algolia products with the pure-Java MiniLM pipeline, bulk-index the vectors into Elasticsearch dense_vector fields, and serve kNN search from a small Quarkus application.",
-    "image": "/images/es-knn-quarkus.png"
+    "image": "/images/es-knn-quarkus.jpg"
   },
   {
     "id": "java-onnx-embeddings",
@@ -13,7 +13,7 @@
     "file": "_posts/java-onnx-embeddings.md",
     "timestamp": 1789776000,
     "summary": "The MiniLM-L6-v2 pipeline with no native build step: official ONNX Runtime Java, Hugging Face tokenizers through DJL, validated value-for-value against a Python reference, plus batched inference.",
-    "image": "/images/java-onnx-embeddings.png"
+    "image": "/images/java-onnx-embeddings.jpg"
   },
   {
     "id": "pca-knn",
@@ -21,7 +21,7 @@
     "file": "_posts/pca-knn.md",
     "timestamp": 1789873200,
     "summary": "Project MiniLM vectors from 384 to 128, 64, and 32 dimensions with a hand-run PCA and compare recall, latency, and storage against Better Binary Quantization on the same kNN index.",
-    "image": "/images/pca-knn.png"
+    "image": "/images/pca-knn.jpg"
   },
   {
     "id": "llm-era-custom-language",
@@ -29,7 +29,7 @@
     "file": "_posts/llm-era-custom-language.md",
     "timestamp": 1789257600,
     "summary": "Build a tiny scripting language — hand-written lexer, LALR grammar compiled by jacc, JVM bytecode generated with ASM — in one afternoon on Java 21, and ask whether LLMs make custom compilers dead or inevitable.",
-    "image": "/images/llm-era-custom-language-header.png"
+    "image": "/images/llm-era-custom-language-header.jpg"
   },
   {
     "id": "es-bert-sentiment",
@@ -37,7 +37,7 @@
     "file": "_posts/es-bert-sentiment-model.md",
     "timestamp": 1787356800,
     "summary": "Train a 1M-parameter BERT from random weights on your own labeled CSV, load it into Elasticsearch 9.x with Eland, and enrich documents at indexing time.",
-    "image": "/images/es-bert-sentiment-header.png"
+    "image": "/images/es-bert-sentiment-header.jpg"
   },
   {
     "id": "quarkus-onion-io",
@@ -45,7 +45,7 @@
     "file": "_posts/quarkus-onion-io.md",
     "timestamp": 1786233600,
     "summary": "Grow the onion from Part 1 with the I/O the real world demands — JSON POST bodies, an HTML table view, Server-Sent Events, and multipart CSV uploads — and watch every single format land in the adapter ring. The Part 1 rules survive untouched, and one new ArchUnit rule turns the article's thesis — I/O formats are adapter concerns — into a build guard.",
-    "image": "/images/quarkus-onion-io-header.png"
+    "image": "/images/quarkus-onion-io-header.jpg"
   },
   {
     "id": "quarkus-onion-architecture",
@@ -53,7 +53,7 @@
     "file": "_posts/quarkus-onion-architecture.md",
     "timestamp": 1786060800,
     "summary": "Refactor a plain Java hello world into a full Onion Architecture — domain, application, an existing CLI consumer, and Quarkus as an optional second consumer — with ArchUnit guarding every step so the boundary never silently rots.",
-    "image": "/images/quarkus-onion-header.png"
+    "image": "/images/quarkus-onion-header.jpg"
   },
   {
     "id": "bento-conduit-cdc-pipeline",
@@ -61,7 +61,7 @@
     "file": "_posts/bento-conduit-cdc-pipeline-demo.md",
     "timestamp": 1785542400,
     "summary": "A CDC-powered pipeline with no message broker — Conduit streams PostgreSQL logical replication changes to a plain JSONL bridge file, and Bento tails the file, joins actors, and indexes enriched documents into Elasticsearch. Deletes propagate, stale documents are gone.",
-    "image": "/images/bento-conduit-cdc-header.png"
+    "image": "/images/bento-conduit-cdc-header.jpg"
   },
   {
     "id": "camel-k-cdc-pipeline",
@@ -69,7 +69,7 @@
     "file": "_posts/camel-k-cdc-pipeline-demo.md",
     "timestamp": 1785456000,
     "summary": "A CDC-powered evolution of the Camel K ETL pipeline — replacing H2 polling with PostgreSQL logical replication and Debezium, with a Groovy processor that handles creates, updates, and deletes natively. Stale documents are a thing of the past.",
-    "image": "/images/camel-k-data-pipeline-header.png"
+    "image": "/images/camel-k-data-pipeline-header.jpg"
   },
   {
     "id": "camel-k-pipeline",
@@ -77,7 +77,7 @@
     "file": "_posts/camel-k-data-pipeline-demo.md",
     "timestamp": 1785196800,
     "summary": "A practical end-to-end demonstration of Apache Camel K on Kubernetes, using separate vintage-styled Kamelets for two H2 databases and a Groovy-powered join processor to index joined movie-actor documents into Elasticsearch.",
-    "image": "/images/camel-k-data-pipeline-header.png"
+    "image": "/images/camel-k-data-pipeline-header.jpg"
   },
   {
     "id": "maven003",
@@ -85,7 +85,7 @@
     "file": "_posts/maven-release-trunk-based-development.md",
     "timestamp": 1785024000,
     "summary": "Extend the automation from Automating Maven Releases with GitHub Actions with a trunk-based branching model — major/minor releases from main, patch releases from release branches, all automated.",
-    "image": "/images/maven-trunk-based-development.png"
+    "image": "/images/maven-trunk-based-development.jpg"
   },
   {
     "id": "maven002",
@@ -93,7 +93,7 @@
     "file": "_posts/maven-release-github-actions.md",
     "timestamp": 1784937600,
     "summary": "Automate the release process from Understanding Maven's Release Lifecycle — deploy SNAPSHOTs on every push and cut releases with a single button click.",
-    "image": "/images/maven-release-automation.png"
+    "image": "/images/maven-release-automation.jpg"
   },
   {
     "id": "graalvm-quarkus-hello",
@@ -101,7 +101,7 @@
     "file": "_posts/graalvm-quarkus-docker-hello.md",
     "timestamp": 1784246400,
     "summary": "Build a native Java microservice using GraalVM and Quarkus with a multi-stage Dockerfile — no local GraalVM installation required.",
-    "image": "/images/graalvm-quarkus-header.png"
+    "image": "/images/graalvm-quarkus-header.jpg"
   },
   {
     "id": "open-knowledge-format",
@@ -109,7 +109,7 @@
     "file": "_posts/open-knowledge-format.md",
     "timestamp": 1783123200,
     "summary": "\"OKF is an open, vendor-neutral specification for representing knowledge as a directory of markdown files with YAML frontmatter—designed to be authored by people, generated by agents, and consumed by both.\"",
-    "image": "/images/okf-header.png"
+    "image": "/images/okf-header.jpg"
   },
   {
     "id": "simd-tokenizer-poc",
@@ -125,7 +125,7 @@
     "file": "_posts/oidc-agent-identity.md",
     "timestamp": 1775520000,
     "summary": "\"How OpenID Connect is being extended to authenticate, authorize, and delegate credentials for autonomous AI agents—and what a real credential exchange looks like.\"",
-    "image": "/images/oidc-agent-identity-header.png"
+    "image": "/images/oidc-agent-identity-header.jpg"
   },
   {
     "id": "geoip2-zig",
@@ -133,7 +133,7 @@
     "file": "_posts/geoip2-zig.md",
     "timestamp": 1775260800,
     "summary": "A deep dive into implementing binary protocol parsing, Patricia trie traversal, and async I/O in Zig—no external dependencies.",
-    "image": "/images/geoip2-zig-header.png"
+    "image": "/images/geoip2-zig-header.jpg"
   },
   {
     "id": "env-fragmentation",
@@ -173,7 +173,7 @@
     "file": "_posts/gguf-introduction.md",
     "timestamp": 1743465600,
     "summary": "GGUF, the binary format powering local LLM inference, and how quantization makes AI accessible on consumer hardware.",
-    "image": "/images/gguf-header.png"
+    "image": "/images/gguf-header.jpg"
   },
   {
     "id": "java-zig-ffi",

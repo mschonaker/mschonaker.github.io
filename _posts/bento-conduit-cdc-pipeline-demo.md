@@ -3,7 +3,7 @@ id: bento-conduit-cdc-pipeline
 title: Change Data Capture with Conduit, PostgreSQL, and Bento
 summary: A CDC-powered pipeline with no message broker — Conduit streams PostgreSQL logical replication changes to a plain JSONL bridge file, and Bento tails the file, joins actors, and indexes enriched documents into Elasticsearch. Deletes propagate, stale documents are gone.
 date: 2026-08-01
-image: /images/bento-conduit-cdc-header.png
+image: /images/bento-conduit-cdc-header.jpg
 ---
 
 # Change Data Capture with Conduit, PostgreSQL, and Bento
