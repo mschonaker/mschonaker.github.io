@@ -1,0 +1,5 @@
+target/
+.quarkus/
+data/
+model.onnx
+tokenizer.json

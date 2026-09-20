@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KNN product search</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 3rem auto; padding: 0 1rem; }
+  form { display: flex; gap: .5rem; }
+  input[type=search] { flex: 1; padding: .6rem; font-size: 1rem; }
+  button { padding: .6rem 1.2rem; font-size: 1rem; }
+  li { margin: .8rem 0; list-style: none; padding: .6rem; border: 1px solid #ddd; border-radius: 6px; }
+  ul { padding: 0; }
+  .score { color: #666; font-size: .85rem; }
+  .brand { color: #06c; }
+</style>
+</head>
+<body>
+<h1>KNN product search</h1>
+<p>Semantic search: your question is embedded with MiniLM in the backend and answered by an Elasticsearch kNN query.</p>
+<form id="f">
+  <input type="search" id="q" placeholder="e.g. quiet keyboard for office work" autofocus>
+  <button type="submit">Search</button>
+</form>
+<ul id="results"></ul>
+<script>
+const f = document.getElementById('f');
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  const list = document.getElementById('results');
+  list.innerHTML = '<li>searching…</li>';
+  try {
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q) + '&n=10');
+    const hits = await res.json();
+    list.innerHTML = hits.map(h =>
+      `<li><b>${h.name}</b><br><span class="brand">${h.brand || ''}</span> · $${h.price} · <span class="score">score ${h.score.toFixed(4)}</span></li>`
+    ).join('') || '<li>no results</li>';
+  } catch (err) {
+    list.innerHTML = '<li>error: ' + err + '</li>';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,5 +1,29 @@
 [
   {
+    "id": "es-knn-quarkus",
+    "type": "article",
+    "file": "_posts/es-knn-quarkus.md",
+    "timestamp": 1789776000,
+    "summary": "Embed 10,000 Algolia products with the pure-Java MiniLM pipeline, bulk-index the vectors into Elasticsearch dense_vector fields, and serve kNN search from a small Quarkus application.",
+    "image": "/images/es-knn-quarkus.png"
+  },
+  {
+    "id": "java-onnx-embeddings",
+    "type": "article",
+    "file": "_posts/java-onnx-embeddings.md",
+    "timestamp": 1789776000,
+    "summary": "The MiniLM-L6-v2 pipeline with no native build step: official ONNX Runtime Java, Hugging Face tokenizers through DJL, validated value-for-value against a Python reference, plus batched inference.",
+    "image": "/images/java-onnx-embeddings.png"
+  },
+  {
+    "id": "pca-knn",
+    "type": "article",
+    "file": "_posts/pca-knn.md",
+    "timestamp": 1789873200,
+    "summary": "Project MiniLM vectors from 384 to 128, 64, and 32 dimensions with a hand-run PCA and compare recall, latency, and storage against Better Binary Quantization on the same kNN index.",
+    "image": "/images/pca-knn.png"
+  },
+  {
     "id": "llm-era-custom-language",
     "type": "article",
     "file": "_posts/llm-era-custom-language.md",
