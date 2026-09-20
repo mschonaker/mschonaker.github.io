@@ -103,6 +103,14 @@ async function renderPosts() {
   postsContainer.innerHTML = articleLinks.join('');
 }
 
+function cssHeroTheme(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return 'hero-theme-' + (hash % 5);
+}
+
 async function renderArticle(post) {
   try {
     const response = await fetch(post.file);
@@ -119,8 +127,14 @@ async function renderArticle(post) {
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
         <div class="article-content">
-          ${post.image ? `<img src="${escapeHtml(post.image)}" class="article-hero" alt="${escapeHtml(title)}">` : ''}
-          <h1>${escapeHtml(title)}</h1>
+          ${post.image
+            ? `<div class="article-hero">
+                 <img src="${escapeHtml(post.image)}" alt="${escapeHtml(title)}">
+                 <h1 class="article-hero-title">${escapeHtml(title)}</h1>
+               </div>`
+            : `<div class="article-hero article-hero-css ${cssHeroTheme(post.id)}">
+                 <h1 class="article-hero-title">${escapeHtml(title)}</h1>
+               </div>`}
           <div class="article-date">${formatDate(post.timestamp)}</div>
           ${html}
         </div>
