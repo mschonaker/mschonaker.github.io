@@ -79,8 +79,11 @@ async function renderPosts() {
         const md = await res.text();
         const match = md.match(/^# (.+)$/m);
         const title = match ? match[1] : 'Untitled';
+        const heroImage = post.image || (md.match(/^\s*!\[[^\]]*\]\(([^)\s]+)/) || [])[1];
+        const heroClass = heroImage ? ' post-hero' : '';
+        const heroStyle = heroImage ? ` style="--hero: url('${escapeHtml(heroImage)}')"` : '';
         return `
-          <div class="post" id="post-${post.id}">
+          <div class="post${heroClass}" id="post-${post.id}"${heroStyle}>
             <div class="post-content">
               <a href="#article/${post.id}" class="article-link">
                 ${escapeHtml(title)}
@@ -274,6 +277,17 @@ function copyViaExecCommand(text) {
     textarea.remove();
   }
 }
+
+document.addEventListener('click', (event) => {
+  if (event.target.closest('a, button')) return;
+  if (window.getSelection().toString()) return;
+  const card = event.target.closest('.post');
+  if (!card) return;
+  const link = card.querySelector('.article-link');
+  if (link) {
+    window.location.hash = link.getAttribute('href').slice(1);
+  }
+});
 
 document.addEventListener('click', (event) => {
   const button = event.target.closest('.copy-btn');
