@@ -63,7 +63,26 @@ State and questions live in one JSON file. Try new inputs by editing it — neve
 }
 ```
 
-The complete code lives in `_code/laya-hello-world/`: the runner (`hello_laya.py`), a routing demo (`route_only.py`), a latency benchmark (`bench_laya.py`), and three ready-made requests. Run:
+The runner (`hello_laya.py`) is deliberately small. It loads the JSON file, builds a `Router`, and makes one call. The whole PEP 723 header plus the core of `main()`:
+
+```python
+#!/usr/bin/env python
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["laya"]
+# ///
+"""Laya hello world: run one editable request.json through the Router."""
+from laya import Router
+
+req = json.loads(Path(args.request).read_text())
+router = Router(**({"device": args.device} if args.device else {}))
+
+t0 = time.perf_counter()
+result = router.predict(req["state"], req["questions"], **({"model": args.model} if args.model else {}))
+cold = (time.perf_counter() - t0) * 1000
+```
+
+One `predict(state, questions)` call answers every question. The script also re-runs the same call to time the warm path. Run it:
 
 ```bash
 cd _code/laya-hello-world
@@ -99,15 +118,38 @@ The department flips to `technical`, churn drops from 0.879 to 0.069. The answer
 
 `route_only.py` inspects the routing decision alone, before any weights load:
 
-```text
-Please refund the duplicate charge...    -> english      - English Latin text
-मुझसे मार्च में दो बार शुल्क लिया...     -> multilingual - non-Latin script (devanagari, 100% of letters);
-                                                             the English checkpoint cannot read it
-La aplicación se cierra cada vez que...  -> multilingual - Latin script, 3% non-English letters;
-                                                             not safe for the English checkpoint
+```python
+#!/usr/bin/env python
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["laya"]
+# ///
+"""Show the Router's language routing decisions without loading any checkpoint."""
+from laya import Router
+
+questions = {"department": {"type": "choice", "instructions": "Which department?",
+               "criteria": {"billing": "invoices, payments, refunds",
+                            "technical": "bugs, outages, system errors",
+                            "other": "everything else"}}}
+
+router = Router()  # lazy: route() never downloads weights
+for text in ["Please refund the duplicate charge on my invoice.",
+             "मुझसे मार्च में दो बार शुल्क लिया गया, कृपया डुप्लिकेट राशि वापस करें।",
+             "La aplicación se cierra cada vez que abro la configuración.",
+             "Hello, world"]:
+    r = router.route(text, questions)
+    print(f"{text[:40]:42s} -> model={r.model:12s} reason: {r.reason}")
 ```
 
-Detection costs under a millisecond. Their benchmark shows why it matters: the english checkpoint on Khmer scored 0.000 accuracy at 0.952 confidence — confidently wrong, so a confidence gate cannot catch it.
+Output from my Mac:
+
+```text
+Please refund the duplicate charge on m   -> model=english      reason: English Latin text
+मुझसे मार्च में दो बार शुल्क लिया गया, कृपया   -> model=multilingual reason: non-Latin script (devanagari, 100% of letters)
+La aplicación se cierra cada vez que abr   -> model=multilingual reason: Latin script, 3% non-English letters
+```
+
+The reason strings explain each pick in full; the english checkpoint "cannot read" the devanagari text, and the Spanish ticket is not safe for the english checkpoint either. Detection costs under a millisecond. Their benchmark shows why it matters: the english checkpoint on Khmer scored 0.000 accuracy at 0.952 confidence — confidently wrong, so a confidence gate cannot catch it.
 
 ## How the call flows
 
@@ -121,7 +163,30 @@ flowchart LR
 
 ## Apple Silicon: MPS works, the fast path does not
 
-`bench_laya.py` measures warm latency properly: one preloaded router, 100 `predict` calls over varied ticket texts, three questions each, warmup call excluded. Measured on an Apple Silicon Mac, english checkpoint:
+`bench_laya.py` measures warm latency properly: one preloaded router, 100 `predict` calls over varied ticket texts, three questions each, warmup call excluded. The core of `main()`:
+
+```python
+rng = random.Random(42)
+states = make_states(100, rng)
+
+router = Router(device="mps")
+router.preload(["english"])
+router.predict(states[0], QUESTIONS)  # compile/warmup pass, not counted
+
+samples = []
+for state in states:
+    t0 = time.perf_counter()
+    result = router.predict(state, QUESTIONS)
+    samples.append((time.perf_counter() - t0) * 1000)
+
+samples.sort()
+n = len(samples)
+mean = sum(samples) / n
+p50 = samples[n // 2]
+p95 = samples[int(n * 0.95)]
+```
+
+`make_states` fills five ticket templates with random months, amounts, and products, so the 100 calls run on distinct inputs. Measured on an Apple Silicon Mac, english checkpoint:
 
 | Device | Cold (load + first call) | Warm |
 |--------|--------------------------|------|

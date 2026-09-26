@@ -220,7 +220,40 @@ public class SearchResource {
 }
 ```
 
-Quarkus serves a tiny HTML page next to the API. It fetches `/api/search` and lists name, brand, price, and score. The complete code lives in `_code/es-knn-quarkus/` — run `mvn package && java -jar target/quarkus-app/quarkus-run.jar`, then open `http://localhost:8080`.
+Quarkus serves a tiny HTML page next to the API. The whole page is one form and this submit handler — it fetches `/api/search` and lists name, brand, price, and score:
+
+```html
+<form id="f">
+  <input type="search" id="q" placeholder="e.g. quiet keyboard for office work" autofocus>
+  <button type="submit">Search</button>
+</form>
+<ul id="results"></ul>
+<script>
+const f = document.getElementById('f');
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  const list = document.getElementById('results');
+  list.innerHTML = '<li>searching…</li>';
+  try {
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q) + '&n=10');
+    const hits = await res.json();
+    list.innerHTML = hits.map(h =>
+      `<li><b>${h.name}</b><br><span class="brand">${h.brand || ''}</span> · $${h.price} · <span class="score">score ${h.score.toFixed(4)}</span></li>`
+    ).join('') || '<li>no results</li>';
+  } catch (err) {
+    list.innerHTML = '<li>error: ' + err + '</li>';
+  }
+});
+</script>
+```
+
+No framework, no build step — it sits in `META-INF/resources/index.html` and Quarkus serves it statically. Run the app and open `http://localhost:8080`:
+
+```bash
+mvn package && java -jar target/quarkus-app/quarkus-run.jar
+```
 
 ## Search Results
 
