@@ -23,25 +23,21 @@ The twist: each Kamelet is styled to look like it was created at a different tim
 
 The pipeline uses three Kamelets wired together by a Pipe, with Elasticsearch as pre-existing infrastructure:
 
-```
-┌─────────────────────┐     ┌──────────────────────┐     ┌──────────────────────────┐
-│   movies-source     │────►│     groovy-join      │────►│ elasticsearch-index-sink │
-│  (source kamelet)   │     │  (processor kamelet)  │     │  (sink kamelet, pre-ex)  │
-│                     │     │                      │     │                          │
-│  polls movies from  │     │  receives movie row  │     │  indexes joined JSON     │
-│  H2 via SQL +       │     │  builds actors query │     │  into ES cluster         │
-│  Groovy properties  │     │  via Groovy          │     │                          │
-│                     │     │  queries actors DB   │     │                          │
-│  vintage 2024       │     │  joins with Groovy   │     │  infra, not part of      │
-│  (Alice)            │     │  JsonOutput          │     │  pipeline deployment     │
-└─────────────────────┘     └──────────────────────┘     └──────────────────────────┘
-                                     │
-                                     │ queries via Groovy (setBody → sql:.)
-                                     ▼
-                            ┌──────────────────┐
-                            │   H2 actors DB   │
-                            │  (pre-existing)   │
-                            └──────────────────┘
+```mermaid
+flowchart TB
+    subgraph pipe["Pipe (pipeline deployment)"]
+        src["movies-source<br/>source kamelet, vintage 2024<br/>polls movies from H2 via SQL + Groovy properties"]
+        join["groovy-join<br/>processor kamelet<br/>receives movie row, builds actors query via Groovy<br/>queries actors DB, joins with Groovy JsonOutput"]
+        sink["elasticsearch-index-sink<br/>sink kamelet<br/>indexes joined JSON into ES cluster"]
+        src -->|"movie row ▻"| join
+        join -->|"joined JSON ▻"| sink
+    end
+
+    movies[("H2 movies DB<br/>pre-existing infra")]
+    actors[("H2 actors DB<br/>pre-existing infra<br/>not part of pipeline deployment")]
+
+    movies -->|"poll ▻"| src
+    join -->|"queries via Groovy setBody → sql:. ▻"| actors
 ```
 
 The `actors-source.kamelet.yaml` exists as a standalone artifact with a distinct style (newer, HikariCP-based) — it is not directly wired into this Pipe, but serves as a reusable definition of the actors database pattern from a different engineering vintage.

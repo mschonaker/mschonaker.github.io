@@ -555,10 +555,17 @@ a:visited {
   border-color: var(--accent-hover);
 }
 
+.article-content .mermaid-scroll {
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
 .article-content .mermaid {
   margin: 48px auto !important;
   text-align: center;
   display: block;
+  width: max-content;
+  min-width: 100%;
 }
 
 .article-content code {

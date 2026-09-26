@@ -29,10 +29,10 @@ function formatDate(timestamp) {
 function parseMarkdown(text) {
   const renderer = new marked.Renderer();
   renderer.code = function(code, lang) {
-    if (lang === 'mermaid') {
-      return `<div class="mermaid">${code}</div>`;
-    }
     const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (lang === 'mermaid') {
+      return `<div class="code-block mermaid-block"><button class="copy-btn" type="button" title="Copy Mermaid source">Copy</button><div class="mermaid-scroll"><div class="mermaid">${code}</div></div><code class="mermaid-source" hidden>${escaped}</code></div>`;
+    }
     return `<div class="code-block"><button class="copy-btn" type="button" title="Copy to clipboard">Copy</button><pre><code class="language-${lang}">${escaped}</code></pre></div>`;
   };
   return marked.parse(text, { renderer });
@@ -215,6 +215,7 @@ async function renderArticle(post) {
     `;
     try {
       if (typeof mermaid !== 'undefined' && document.querySelector('.mermaid')) {
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', themeVariables: { fontSize: '14px' }, flowchart: { useMaxWidth: false } });
         await mermaid.run({ querySelector: '.mermaid' });
       }
       postsContainer.querySelectorAll('pre code').forEach(block => {
