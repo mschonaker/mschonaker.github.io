@@ -70,7 +70,7 @@ No code changes to try new inputs. The state and the questions live in one JSON 
 }
 ```
 
-The complete runnable code lives in `_code/laya-hello-world/`: the full runner (`hello_laya.py`), the routing-only demo (`route_only.py`), and three ready-made requests. Each script carries a PEP 723 header, so uv builds the environment for you — no venv to manage. The trimmed core looks like this:
+The complete runnable code lives in `_code/laya-hello-world/`: the full runner (`hello_laya.py`), the routing-only demo (`route_only.py`), a latency benchmark (`bench_laya.py`), and three ready-made requests. Each script carries a PEP 723 header and a `.python-version` file pins Python 3.11, so uv builds the environment for you with no flags and no venv to manage. The trimmed core looks like this:
 
 ```python
 import json, time
@@ -167,19 +167,19 @@ The routing decision happens in pure Python. The single forward pass happens onc
 
 ## Apple Silicon: MPS works, the fast path does not
 
-I measured the same request with `device="mps"` and `device="cpu"` on an Apple Silicon Mac, english checkpoint cached:
+I measured warm latency properly with `bench_laya.py`: one preloaded router, 100 `predict` calls over varied ticket texts (3 question types each), first call excluded as warmup. On an Apple Silicon Mac, english checkpoint:
 
-| Device | Cold (load + first call) | Warm call |
-|--------|--------------------------|-----------|
-| MPS    | ~2.3–2.9 s               | **34–44 ms** |
-| CPU    | ~2.2 s                   | 119 ms    |
+| Device | Cold (load + first call) | Warm, 100 calls |
+|--------|--------------------------|-----------------|
+| MPS    | ~2.3–2.9 s               | **mean 36 ms, p50 34.5 ms, p95 38 ms** |
+| CPU    | ~2.2 s                   | 119 ms (single reference call) |
 
-So Laya does take advantage of Apple Silicon through torch's MPS backend — roughly 3x faster than CPU on this machine. Two caveats from the official docs:
+So Laya does take advantage of Apple Silicon through torch's MPS backend — roughly 3x faster than CPU on this machine. The distribution is tight (min 32 ms, one 210 ms outlier); this is steady-state inference, not a lucky first sample. Two caveats from the official docs:
 
 - The TileLang GPU fast path (`laya[fast]`, CUDA graphs and fused kernels) is NVIDIA-CUDA-only and "falls back to the stock forward on CPU/MPS". Mac users do not get it.
 - Preloading all three checkpoints (`Router(preload=True)`) keeps every language switch under a millisecond of detection cost; on a laptop, lazy loading keeps memory lower. Their docs budget 8 GB RAM for the full CPU setup.
 
-At 34 ms warm on a laptop GPU, a 400M-parameter encoder answers three decisions faster than an eyeblink — while a chat model would still be composing its first token.
+At ~35 ms per decision set on a laptop GPU, a 400M-parameter encoder answers three decisions faster than an eyeblink — while a chat model would still be composing its first token.
 
 ## Honest limits
 
@@ -205,10 +205,11 @@ From the repository root, one command runs everything — uv resolves Python 3.1
 
 ```bash
 cd _code/laya-hello-world
-uv run --python 3.11 hello_laya.py                    # refund ticket
-uv run --python 3.11 hello_laya.py --request request-crash.json
-uv run --python 3.11 hello_laya.py --device cpu       # compare with MPS
-uv run --python 3.11 route_only.py                    # routing, no downloads
+uv run hello_laya.py                    # refund ticket
+uv run hello_laya.py --request request-crash.json
+uv run hello_laya.py --device cpu       # compare with MPS
+uv run route_only.py                    # routing, no downloads
+uv run bench_laya.py                    # 100 calls: mean / p50 / p95
 ```
 
 Then edit `request.json` — the state text and the typed questions — and re-run. No Python code changes. The first `predict` downloads the english checkpoint (~800 MB); warm calls take ~35 ms on Apple Silicon.
