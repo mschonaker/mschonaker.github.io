@@ -33,7 +33,7 @@ function parseMarkdown(text) {
       return `<div class="mermaid">${code}</div>`;
     }
     const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return `<pre><code class="language-${lang}">${escaped}</code></pre>`;
+    return `<div class="code-block"><button class="copy-btn" type="button" title="Copy to clipboard">Copy</button><pre><code class="language-${lang}">${escaped}</code></pre></div>`;
   };
   return marked.parse(text, { renderer });
 }
@@ -217,6 +217,40 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+function copyViaExecCommand(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    return document.execCommand('copy');
+  } finally {
+    textarea.remove();
+  }
+}
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('.copy-btn');
+  if (!button) return;
+  const code = button.closest('.code-block').querySelector('code');
+  const text = code.textContent;
+  const showCopied = () => {
+    button.textContent = 'Copied!';
+    setTimeout(() => {
+      button.textContent = 'Copy';
+    }, 1500);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(showCopied, () => {
+      if (copyViaExecCommand(text)) showCopied();
+    });
+  } else if (copyViaExecCommand(text)) {
+    showCopied();
+  }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof Prism !== 'undefined') {
