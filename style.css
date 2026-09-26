@@ -12,8 +12,9 @@
   --accent: #58a6ff;
   --accent-hover: #79c0ff;
   --accent-press: #388bfd;
-  --code-bg: #1e3a5f;
-  --code-border: #2d5a87;
+  --code-bg: #161b22;
+  --code-border: #30363d;
+  --inline-code-bg: rgba(110, 164, 255, 0.12);
   --inline-code-text: #7dd3fc;
   --success: #3fb950;
   --table-bg: #0d1929;
@@ -423,7 +424,7 @@ pre[class*="language-zig"] .token.builtin {
 }
 
 .article-content code:not(pre code) {
-  background: var(--code-bg);
+  background: var(--inline-code-bg);
   padding: 3px 8px;
   border-radius: 4px;
   color: var(--inline-code-text);
