@@ -136,6 +136,12 @@ async function renderArticle(post) {
     const titleMatch = markdown.match(/^# (.+)$/m);
     const title = titleMatch ? titleMatch[1] : 'Untitled';
     markdown = markdown.replace(/^# .+$/m, '');
+    let heroImage = post.image;
+    const leadingImage = markdown.match(/^\s*!\[[^\]]*\]\(([^)\s]+)/);
+    if (leadingImage) {
+      if (!heroImage) heroImage = leadingImage[1];
+      markdown = markdown.replace(/^\s*!\[[^\]]*\]\([^)]*\)[^\n]*\n/, '');
+    }
     const html = parseMarkdown(markdown).replace(
       /<table>([\s\S]*?)<\/table>/g,
       '<div class="table-wrap"><table>$1</table></div>'
@@ -147,9 +153,9 @@ async function renderArticle(post) {
           <a href="#" onclick="closeArticle(); return false;" class="back-link">← back</a>
         </div>
         <div class="article-content">
-          ${post.image
+          ${heroImage
             ? `<div class="article-hero">
-                 <img src="${escapeHtml(post.image)}" alt="${escapeHtml(title)}">
+                 <img src="${escapeHtml(heroImage)}" alt="${escapeHtml(title)}">
                  <h1 class="article-hero-title">${escapeHtml(title)}</h1>
                </div>`
             : `<div class="article-hero article-hero-css ${cssHeroTheme(post.id)}">

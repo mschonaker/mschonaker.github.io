@@ -262,7 +262,7 @@
     "file": "_posts/hexagonal-architecture-spring-boot.md",
     "timestamp": 1747699200,
     "summary": "Breaking free from Spring annotations in your core business logic using explicit bean registration.",
-    "image": null,
+    "image": "/images/hexagonal-architecture.jpg",
     "tags": [
       "architecture",
       "spring",
@@ -299,7 +299,7 @@
     "file": "_posts/java-zig-ffi.md",
     "timestamp": 1743465600,
     "summary": "Calling Zig compiled libraries from Java using JNR-FFI, without writing any JNI code.",
-    "image": null,
+    "image": "/images/java-zig-ffi.jpg",
     "tags": [
       "java",
       "zig",
@@ -337,7 +337,7 @@
     "file": "_posts/maven-release-lifecycle.md",
     "timestamp": 1743292800,
     "summary": "Understanding Maven's release process and how to properly version your Java projects.",
-    "image": null,
+    "image": "/images/maven-header.jpg",
     "tags": [
       "maven"
     ]
@@ -348,7 +348,7 @@
     "file": "_posts/running-zig-master-in-docker.md",
     "timestamp": 1743206400,
     "summary": "How to build and run the latest Zig compiler from source inside a Docker container.",
-    "image": null,
+    "image": "/images/zig-header.jpg",
     "tags": [
       "zig",
       "docker"

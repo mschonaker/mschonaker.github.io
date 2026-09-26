@@ -4,11 +4,10 @@ title: Understanding Maven's Release Lifecycle
 summary: Understanding Maven's release process and how to properly version your Java projects.
 date: 2025-03-30
 tags: maven
+image: /images/maven-header.jpg
 ---
 
 # Understanding Maven's Release Lifecycle with GitHub Packages
-
-![Maven header](/images/maven-header.jpg)
 
 The Maven release process is a cornerstone of Java artifact management. At its core, Maven's release lifecycle orchestrates a crucial transition: moving from development versions (SNAPSHOTs) to stable, immutable releases.
 

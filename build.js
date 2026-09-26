@@ -29,6 +29,11 @@ function extractTitle(content) {
   return match ? match[1] : 'Untitled';
 }
 
+function hasLeadingBodyImage(content) {
+  const body = content.replace(/^---[\s\S]*?---[\n\r]*/, '').replace(/^# .+$/m, '');
+  return /^\s*!\[/.test(body);
+}
+
 const postsDir = '_posts';
 const outputFile = 'posts.json';
 
@@ -41,6 +46,10 @@ const posts = files.map(file => {
   if (!frontMatter) {
     console.error(`No front matter found in ${file}`);
     return null;
+  }
+
+  if (hasLeadingBodyImage(content)) {
+    console.warn(`WARNING: ${file} starts its body with an image. Put the header image in the front matter 'image:' field instead.`);
   }
 
   const post = {

@@ -4,11 +4,10 @@ title: Hexagonal Architecture in Spring Boot
 summary: Breaking free from Spring annotations in your core business logic using explicit bean registration.
 date: 2025-05-20
 tags: architecture, spring, java
+image: /images/hexagonal-architecture.jpg
 ---
 
 # Hexagonal Architecture in Spring Boot: Breaking Free from Annotations
-
-![Hexagonal Architecture header](/images/hexagonal-architecture.jpg)
 
 The web layer in Spring Boot is fine. Controllers, REST endpoints - they need those annotations to work with Spring MVC's infrastructure. But I've always felt uneasy about scattering `@Component`, `@Service`, and `@Repository` throughout my core business logic. That's not architecture; that's Stockholm syndrome.
 

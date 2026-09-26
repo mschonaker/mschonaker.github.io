@@ -4,11 +4,10 @@ title: Running Zig Master in Docker
 summary: How to build and run the latest Zig compiler from source inside a Docker container.
 date: 2025-03-29
 tags: zig, docker
+image: /images/zig-header.jpg
 ---
 
 # Running Zig Master in Docker
-
-![Zig header](/images/zig-header.jpg)
 
 Want to try the latest Zig development version without installing anything? Docker makes it easy.
 
