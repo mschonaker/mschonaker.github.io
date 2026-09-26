@@ -4,7 +4,7 @@ title: Change Data Capture with Apache Camel K, PostgreSQL, and Debezium
 summary: A CDC-powered evolution of the Camel K ETL pipeline — replacing H2 polling with PostgreSQL logical replication and Debezium, with a Groovy processor that handles creates, updates, and deletes natively. Stale documents are a thing of the past.
 date: 2026-07-31
 tags: cdc, data-pipelines, camel, kafka
-image: /images/camel-k-data-pipeline-header.jpg
+image: /images/camel-k-cdc-pipeline-header.jpg
 ---
 
 # Change Data Capture with Apache Camel K, PostgreSQL, and Debezium

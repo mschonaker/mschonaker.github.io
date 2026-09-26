@@ -4,6 +4,7 @@ title: SIMD Tokenizer - A Whitespace Tokenizer in Zig with Bounded Memory
 summary: A proof-of-concept streaming tokenizer that processes arbitrarily large inputs using just 9KB of memory, achieving 5x speedup over bash baseline.
 date: 2026-04-12
 tags: zig, simd
+image: /images/simd-tokenizer-header.jpg
 ---
 
 # SIMD Tokenizer - A Whitespace Tokenizer in Zig with Bounded Memory

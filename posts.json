@@ -122,7 +122,7 @@
     "file": "_posts/camel-k-cdc-pipeline-demo.md",
     "timestamp": 1785456000,
     "summary": "A CDC-powered evolution of the Camel K ETL pipeline — replacing H2 polling with PostgreSQL logical replication and Debezium, with a Groovy processor that handles creates, updates, and deletes natively. Stale documents are a thing of the past.",
-    "image": "/images/camel-k-data-pipeline-header.jpg",
+    "image": "/images/camel-k-cdc-pipeline-header.jpg",
     "tags": [
       "cdc",
       "data-pipelines",
@@ -200,7 +200,7 @@
     "file": "_posts/simd-tokenizer-publication.md",
     "timestamp": 1775952000,
     "summary": "A proof-of-concept streaming tokenizer that processes arbitrarily large inputs using just 9KB of memory, achieving 5x speedup over bash baseline.",
-    "image": null,
+    "image": "/images/simd-tokenizer-header.jpg",
     "tags": [
       "zig",
       "simd"
@@ -237,7 +237,7 @@
     "file": "_posts/environment-fragmentation-microservices.md",
     "timestamp": 1747699200,
     "summary": "Why your dev/QA/staging environments turn into a group project and how to fix it.",
-    "image": null,
+    "image": "/images/environment-fragmentation-header.jpg",
     "tags": [
       "architecture",
       "microservices"
@@ -249,7 +249,7 @@
     "file": "_posts/esql-docker-example.md",
     "timestamp": 1747699200,
     "summary": "Running Elasticsearch with SQL support in Docker for quick local development and testing.",
-    "image": null,
+    "image": "/images/esql-docker-header.jpg",
     "tags": [
       "elasticsearch",
       "docker",
@@ -275,7 +275,7 @@
     "file": "_posts/free-tailscale-iphone-mac.md",
     "timestamp": 1743724800,
     "summary": "Setting up free Tailscale VPN to connect your iPhone and Mac without paying for a server.",
-    "image": null,
+    "image": "/images/tailscale-mobile-blog-header.jpg",
     "tags": [
       "networking",
       "productivity"
@@ -312,7 +312,7 @@
     "file": "_posts/simd-zig-introduction.md",
     "timestamp": 1743465600,
     "summary": "Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing.",
-    "image": null,
+    "image": "/images/simd-zig-intro-header.jpg",
     "tags": [
       "zig",
       "simd"
@@ -324,7 +324,7 @@
     "file": "_posts/zig-onnx-embeddings.md",
     "timestamp": 1743465600,
     "summary": "Computing sentence embeddings with MiniLM-L6-v2 in pure Zig using ONNX Runtime, without Python.",
-    "image": null,
+    "image": "/images/zig-onnx-embeddings-header.jpg",
     "tags": [
       "zig",
       "ml",

@@ -4,6 +4,7 @@ title: Environment Fragmentation Defined
 summary: Why your dev/QA/staging environments turn into a group project and how to fix it.
 date: 2025-05-20
 tags: architecture, microservices
+image: /images/environment-fragmentation-header.jpg
 ---
 
 # Environment Fragmentation Defined

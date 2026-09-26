@@ -4,6 +4,7 @@ title: Getting Started with SIMD in Zig
 summary: Introduction to SIMD operations in Zig using vector types, with practical examples for numerical computing and image processing.
 date: 2025-04-01
 tags: zig, simd
+image: /images/simd-zig-intro-header.jpg
 ---
 
 # Getting Started with SIMD in Zig
