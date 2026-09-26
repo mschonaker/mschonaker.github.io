@@ -4,7 +4,7 @@
     "type": "article",
     "file": "_posts/laya-hello-world.md",
     "timestamp": 1790380800,
-    "summary": "Run Laya, the open-source non-autoregressive System 1 decision model, from a uv-managed venv on Apple Silicon — an editable request.json, real measured numbers, and honest limits.",
+    "summary": "Run Laya, the open-source non-autoregressive System 1 decision model, with uv on Apple Silicon — an editable request.json, a 100-call benchmark, and honest limits.",
     "image": "/images/laya-hello-world.jpg",
     "tags": [
       "ai",
