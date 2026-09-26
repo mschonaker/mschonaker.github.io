@@ -134,17 +134,47 @@ a:visited {
   50% { opacity: 0; }
 }
 
+@property --sweep-x {
+  syntax: '<percentage>';
+  initial-value: 150%;
+  inherits: false;
+}
+
+@keyframes border-sweep {
+  from { --sweep-x: -12%; }
+  to { --sweep-x: 150%; }
+}
+
+.post,
+.article-content pre,
+.article-content table {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--edge-bg), var(--edge-bg)) padding-box,
+    linear-gradient(90deg,
+      var(--edge-base) calc(var(--sweep-x) - 15%),
+      var(--edge-glow) var(--sweep-x),
+      var(--edge-base) calc(var(--sweep-x) + 15%)) border-box;
+}
+
+.post:hover,
+.article-content pre:hover,
+.article-content .code-block:hover pre,
+.article-content table:hover {
+  animation: border-sweep 6s linear infinite;
+}
+
 .post {
+  --edge-bg: var(--surface);
+  --edge-base: var(--border);
+  --edge-glow: var(--accent);
   margin-bottom: 24px;
   padding: 24px;
-  background: var(--surface);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  border-radius: 4px;
+  transition: transform 0.15s ease;
 }
 
 .post:hover {
-  border-color: var(--accent);
   transform: translateY(-1px);
 }
 
@@ -190,7 +220,7 @@ a:visited {
   flex: 1;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 4px;
   color: var(--text-strong);
   font-family: inherit;
   font-size: inherit;
@@ -231,7 +261,7 @@ a:visited {
   background: var(--surface-raised);
   border: 1px solid var(--border-muted);
   padding: 24px;
-  border-radius: 8px;
+  border-radius: 6px;
   max-width: 600px;
   width: 90%;
 }
@@ -249,7 +279,7 @@ a:visited {
   font-family: inherit;
   font-size: inherit;
   padding: 16px;
-  border-radius: 6px;
+  border-radius: 4px;
   resize: vertical;
 }
 
@@ -264,7 +294,7 @@ a:visited {
   font-family: inherit;
   font-size: 14px;
   padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   margin-right: 12px;
 }
@@ -329,6 +359,7 @@ a:visited {
 }
 
 .tag-pill {
+  position: relative;
   display: inline-block;
   padding: 1px 10px;
   border-radius: 999px;
@@ -337,6 +368,35 @@ a:visited {
   color: hsl(var(--pill-hue) 80% 75%);
   background: hsl(var(--pill-hue) 60% 40% / 0.18);
   border: 1px solid hsl(var(--pill-hue) 60% 50% / 0.45);
+  transition: border-color 0.15s ease;
+}
+
+.tag-pill::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 999px;
+  padding: 1px;
+  background: linear-gradient(90deg,
+      hsl(var(--pill-hue) 60% 50% / 0.45) calc(var(--sweep-x) - 20%),
+      hsl(var(--pill-hue) 85% 75%) var(--sweep-x),
+      hsl(var(--pill-hue) 60% 50% / 0.45) calc(var(--sweep-x) + 20%));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.tag-pill:hover::after {
+  opacity: 1;
+  animation: border-sweep 6s linear infinite;
 }
 
 .article-view {
@@ -397,13 +457,13 @@ a:visited {
 }
 
 .article-content pre {
-  background: var(--code-bg);
-  border: 1px solid var(--code-border);
-  border-radius: 6px;
+  --edge-bg: var(--code-bg);
+  --edge-base: var(--code-border);
+  --edge-glow: var(--accent);
+  border-radius: 4px;
   padding: 16px;
   margin: 16px 0;
   overflow-x: auto;
-  transition: background 0.15s ease;
 }
 
 .article-content .code-block {
@@ -417,7 +477,7 @@ a:visited {
 
 .article-content .code-block:hover pre,
 .article-content pre:hover {
-  background: var(--code-hover);
+  --edge-bg: var(--code-hover);
 }
 
 .copy-btn {
@@ -431,7 +491,7 @@ a:visited {
   color: var(--text-muted);
   background: var(--code-bg);
   border: 1px solid var(--code-border);
-  border-radius: 0 6px 0 6px;
+  border-radius: 0 4px 0 4px;
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -535,14 +595,14 @@ pre[class*="language-zig"] .token.builtin {
 .article-content img {
   max-width: 100%;
   height: auto;
-  border-radius: 6px;
+  border-radius: 4px;
   margin: 16px 0;
 }
 
 .article-hero {
   position: relative;
   width: 100%;
-  border-radius: 8px;
+  border-radius: 6px;
   margin-bottom: 24px;
   overflow: hidden;
   line-height: 0;
@@ -551,7 +611,7 @@ pre[class*="language-zig"] .token.builtin {
 .article-hero img {
   width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 6px;
   margin: 0;
 }
 
@@ -591,13 +651,15 @@ pre[class*="language-zig"] .token.builtin {
 .hero-theme-4 { background-color: #1e3a29; background-image: radial-gradient(circle at 85% 15%, rgba(63, 185, 80, 0.35), transparent 55%), repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 14px); }
 
 .article-content table {
+  --edge-bg: var(--table-bg);
+  --edge-base: var(--table-head);
+  --edge-glow: var(--accent);
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 24px 0;
-  background: var(--table-bg);
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
-  border: 1px solid var(--table-head);
 }
 
 .article-content th,
