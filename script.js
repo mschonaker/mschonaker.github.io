@@ -66,7 +66,13 @@ async function renderPosts() {
     }
   }
   
-  const articleLinks = await Promise.all(sorted.map(async post => {
+  renderTagBar();
+  
+  const visible = activeTag
+    ? sorted.filter(p => (p.tags || []).includes(activeTag))
+    : sorted;
+  
+  const articleLinks = await Promise.all(visible.map(async post => {
     if (post.type === 'article') {
       try {
         const res = await fetch(post.file);
@@ -128,7 +134,44 @@ function tagPills(tags) {
   }).join('') + '</div>';
 }
 
+let activeTag = null;
+let currentView = null;
+
+function renderTagBar() {
+  const bar = document.getElementById('tag-bar');
+  if (!bar) return;
+  const counts = new Map();
+  posts.forEach(post => (post.tags || []).forEach(tag => {
+    counts.set(tag, (counts.get(tag) || 0) + 1);
+  }));
+  if (!counts.size) {
+    bar.hidden = true;
+    return;
+  }
+  const tags = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || a.localeCompare(b));
+  bar.innerHTML = tags.map(tag => {
+    const hue = tagColor(tag);
+    const active = tag === activeTag ? ' tag-pill-active' : '';
+    return `<span class="tag-pill${active}" style="--pill-hue: ${hue}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`;
+  }).join('');
+  bar.hidden = false;
+}
+
+function selectTag(tag) {
+  activeTag = activeTag === tag ? null : tag;
+  renderTagBar();
+  renderPosts();
+}
+
+document.addEventListener('click', (event) => {
+  const pill = event.target.closest('#tag-bar .tag-pill');
+  if (!pill) return;
+  selectTag(pill.dataset.tag);
+});
+
 async function renderArticle(post) {
+  const bar = document.getElementById('tag-bar');
+  if (bar) bar.hidden = true;
   try {
     const response = await fetch(post.file);
     let markdown = await response.text();

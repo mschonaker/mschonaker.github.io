@@ -399,6 +399,31 @@ a:visited {
   animation: border-sweep 6s linear infinite;
 }
 
+.tag-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -20px 0 32px;
+}
+
+.tag-bar[hidden] {
+  display: none;
+}
+
+.tag-bar .tag-pill {
+  cursor: pointer;
+}
+
+.tag-pill-active {
+  background: hsl(var(--pill-hue) 60% 45% / 0.5);
+  color: var(--text-bright);
+}
+
+.tag-pill-active::after {
+  opacity: 1;
+  animation: border-sweep 6s linear infinite;
+}
+
 .article-view {
   padding: 0;
 }
