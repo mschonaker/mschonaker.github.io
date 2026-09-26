@@ -70,7 +70,7 @@ No code changes to try new inputs. The state and the questions live in one JSON 
 }
 ```
 
-The runner reads the file, calls the Router once, and prints the routing reason, every answer, and timing:
+The complete runnable code lives in `_code/laya-hello-world/`: the full runner (`hello_laya.py`), the routing-only demo (`route_only.py`), and three ready-made requests. Each script carries a PEP 723 header, so uv builds the environment for you — no venv to manage. The trimmed core looks like this:
 
 ```python
 import json, time
@@ -201,9 +201,17 @@ These are unusually candid for a project launch, and they make the numbers above
 
 ## Try it yourself
 
-1. `uv venv --python 3.11 && uv pip install laya`
-2. Copy `request.json` and the runner above.
-3. Edit only the JSON. Run. Watch the routing reason and the distributions.
+From the repository root, one command runs everything — uv resolves Python 3.10+ and installs `laya` itself:
+
+```bash
+cd _code/laya-hello-world
+uv run --python 3.11 hello_laya.py                    # refund ticket
+uv run --python 3.11 hello_laya.py --request request-crash.json
+uv run --python 3.11 hello_laya.py --device cpu       # compare with MPS
+uv run --python 3.11 route_only.py                    # routing, no downloads
+```
+
+Then edit `request.json` — the state text and the typed questions — and re-run. No Python code changes. The first `predict` downloads the english checkpoint (~800 MB); warm calls take ~35 ms on Apple Silicon.
 
 A hello world is normally about printing what you already know. This one is about deciding what you did not expect, in one pass, before the LLM has finished saying hello.
 
