@@ -1,3 +1,26 @@
+:root {
+  --bg: #0d1117;
+  --surface: #16213e;
+  --surface-raised: #1a1a2e;
+  --border: #0f3460;
+  --border-muted: #333;
+  --text: #c9d1d9;
+  --text-body: #c0c0c0;
+  --text-strong: #e0e0e0;
+  --text-bright: #fff;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  --accent-hover: #79c0ff;
+  --accent-press: #388bfd;
+  --code-bg: #1e3a5f;
+  --code-border: #2d5a87;
+  --inline-code-text: #7dd3fc;
+  --success: #3fb950;
+  --table-bg: #0d1929;
+  --table-head: #1a3050;
+  --table-hover: #112240;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -5,8 +28,8 @@
 }
 
 body {
-  background: #0d1117;
-  color: #c9d1d9;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 15px;
   line-height: 1.7;
@@ -15,12 +38,12 @@ body {
 }
 
 a {
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
 }
 
 a:visited {
-  color: #58a6ff;
+  color: var(--accent);
 }
 
 .terminal {
@@ -35,31 +58,31 @@ a:visited {
 .header {
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-muted);
 }
 
 .prompt {
-  color: #58a6ff;
+  color: var(--accent);
   font-weight: 500;
 }
 
 .prompt-at {
-  color: #fff;
+  color: var(--text-bright);
   font-weight: 500;
 }
 
 .prompt-host {
-  color: #fff;
+  color: var(--text-bright);
   font-weight: 500;
 }
 
 .command {
-  color: #e0e0e0;
+  color: var(--text-strong);
   margin-left: 8px;
 }
 
 .output {
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 32px;
 }
 
@@ -67,7 +90,7 @@ a:visited {
   display: inline-block;
   width: 8px;
   height: 16px;
-  background: #58a6ff;
+  background: var(--accent);
   animation: blink 1s step-end infinite;
   vertical-align: middle;
   margin-left: 2px;
@@ -80,14 +103,14 @@ a:visited {
 .post {
   margin-bottom: 24px;
   padding: 24px;
-  background: #16213e;
+  background: var(--surface);
   border-radius: 12px;
-  border: 1px solid #0f3460;
+  border: 1px solid var(--border);
 }
 
 .welcome {
   margin-bottom: 32px;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .post-content {
@@ -95,7 +118,7 @@ a:visited {
 }
 
 .post-meta {
-  color: #666;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -104,14 +127,14 @@ a:visited {
 }
 
 .post-actions a {
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
   margin-right: 16px;
   font-size: 13px;
 }
 
 .post-actions a:hover {
-  color: #79c0ff;
+  color: var(--accent-hover);
 }
 
 .input-area {
@@ -119,15 +142,15 @@ a:visited {
   align-items: center;
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--border-muted);
 }
 
 .input-area input {
   flex: 1;
-  background: #16213e;
-  border: 1px solid #0f3460;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #e0e0e0;
+  color: var(--text-strong);
   font-family: inherit;
   font-size: inherit;
   margin-left: 8px;
@@ -136,7 +159,7 @@ a:visited {
 }
 
 .input-area input:focus {
-  border-color: #3fb950;
+  border-color: var(--success);
 }
 
 .input-area input::placeholder {
@@ -145,7 +168,7 @@ a:visited {
 
 .copyleft {
   margin-top: 48px;
-  color: #666;
+  color: var(--text-muted);
   font-size: 13px;
   text-align: center;
 }
@@ -164,8 +187,8 @@ a:visited {
 }
 
 .modal-content {
-  background: #1a1a2e;
-  border: 1px solid #333;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-muted);
   padding: 24px;
   border-radius: 12px;
   max-width: 600px;
@@ -179,9 +202,9 @@ a:visited {
 
 .modal-content textarea {
   width: 100%;
-  background: #16213e;
-  border: 1px solid #0f3460;
-  color: #e0e0e0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-strong);
   font-family: inherit;
   font-size: inherit;
   padding: 16px;
@@ -194,9 +217,9 @@ a:visited {
 }
 
 .modal-buttons button {
-  background: #58a6ff;
+  background: var(--accent);
   border: none;
-  color: white;
+  color: var(--text-bright);
   font-family: inherit;
   font-size: 14px;
   padding: 12px 24px;
@@ -206,7 +229,7 @@ a:visited {
 }
 
 .modal-buttons button:hover {
-  background: #388bfd;
+  background: var(--accent-press);
 }
 
 .modal-buttons button:last-child {
@@ -217,11 +240,11 @@ a:visited {
 
 .modal-buttons button:last-child:hover {
   border-color: #888;
-  color: #e0e0e0;
+  color: var(--text-strong);
 }
 
 .article-link {
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
@@ -232,7 +255,7 @@ a:visited {
 }
 
 .article-date {
-  color: #666;
+  color: var(--text-muted);
   font-size: 13px;
   margin-left: 12px;
   display: block;
@@ -246,7 +269,7 @@ a:visited {
 }
 
 .article-summary {
-  color: #888;
+  color: var(--text-muted);
   font-size: 14px;
   margin-top: 8px;
   line-height: 1.5;
@@ -284,26 +307,26 @@ a:visited {
 }
 
 .back-link {
-  color: #666;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 14px;
 }
 
 .back-link:hover {
-  color: #58a6ff;
+  color: var(--accent);
 }
 
 .article-content h1 {
   font-size: 28px;
   margin: 0 0 12px 0;
-  color: #fff;
+  color: var(--text-bright);
   font-weight: 600;
 }
 
 .article-content h2 {
   font-size: 20px;
   margin: 32px 0 12px 0;
-  color: #e0e0e0;
+  color: var(--text-strong);
   font-weight: 600;
 }
 
@@ -316,7 +339,7 @@ a:visited {
 
 .article-content p {
   margin-bottom: 16px;
-  color: #c0c0c0;
+  color: var(--text-body);
 }
 
 .article-content ul, .article-content ol {
@@ -325,12 +348,12 @@ a:visited {
 
 .article-content li {
   margin-bottom: 6px;
-  color: #c0c0c0;
+  color: var(--text-body);
 }
 
 .article-content pre {
-  background: #1e3a5f;
-  border: 1px solid #2d5a87;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
   border-radius: 8px;
   padding: 16px;
   margin: 16px 0;
@@ -350,7 +373,7 @@ a:visited {
 }
 
 pre code {
-  color: #e6edf3;
+  color: var(--text);
 }
 
 .xml-tag {
@@ -358,7 +381,7 @@ pre code {
 }
 
 .xml-attr {
-  color: #79c0ff;
+  color: var(--accent-hover);
 }
 
 .xml-value {
@@ -366,7 +389,7 @@ pre code {
 }
 
 .xml-entity {
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .hljs-tag {
@@ -378,7 +401,7 @@ pre code {
 }
 
 .hljs-attr {
-  color: #79c0ff;
+  color: var(--accent-hover);
 }
 
 .hljs-string {
@@ -386,7 +409,7 @@ pre code {
 }
 
 .hljs-meta {
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 code.language-zig .token.keyword,
@@ -399,20 +422,16 @@ pre[class*="language-zig"] .token.builtin {
   color: #ff7b72;
 }
 
-pre code {
-  color: #c9d1d9;
-}
-
 .article-content code:not(pre code) {
-  background: #1e3a5f;
+  background: var(--code-bg);
   padding: 3px 8px;
   border-radius: 4px;
-  color: #7dd3fc;
+  color: var(--inline-code-text);
   font-size: 13px;
 }
 
 .article-content strong {
-  color: #fff;
+  color: var(--text-bright);
   font-weight: 600;
 }
 
@@ -423,7 +442,7 @@ pre code {
 
 .article-content hr {
   border: none;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--border-muted);
   margin: 24px 0;
 }
 
@@ -460,7 +479,7 @@ pre code {
   font-size: 28px;
   line-height: 1.3;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-bright);
   text-shadow: 0 1px 6px #000, 0 2px 18px #000, 0 0 32px rgba(0, 0, 0, 0.8);
 }
 
@@ -489,10 +508,10 @@ pre code {
   width: 100%;
   border-collapse: collapse;
   margin: 24px 0;
-  background: #0d1929;
+  background: var(--table-bg);
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #1a3050;
+  border: 1px solid var(--table-head);
 }
 
 .article-content th,
@@ -502,8 +521,8 @@ pre code {
 }
 
 .article-content th {
-  background: #1a3050;
-  color: #79c0ff;
+  background: var(--table-head);
+  color: var(--accent-hover);
   font-weight: 600;
   font-size: 13px;
   text-transform: uppercase;
@@ -511,10 +530,10 @@ pre code {
 }
 
 .article-content td {
-  color: #c9d1d9;
-  border-top: 1px solid #1a3050;
+  color: var(--text);
+  border-top: 1px solid var(--table-head);
 }
 
 .article-content tr:hover td {
-  background: #112240;
+  background: var(--table-hover);
 }
