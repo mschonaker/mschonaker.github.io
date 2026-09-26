@@ -107,6 +107,12 @@ a:visited {
   background: var(--surface);
   border-radius: 12px;
   border: 1px solid var(--border);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.post:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .welcome {
@@ -341,6 +347,10 @@ a:visited {
 .article-content p {
   margin-bottom: 16px;
   color: var(--text-body);
+}
+
+.article-content a:hover {
+  text-decoration: underline;
 }
 
 .article-content ul, .article-content ol {
