@@ -549,3 +549,27 @@ pre[class*="language-zig"] .token.builtin {
 .article-content tr:hover td {
   background: var(--table-hover);
 }
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+}
+
+.table-wrap table {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 24px 16px;
+  }
+
+  .post {
+    padding: 18px;
+  }
+
+  .article-content .article-hero-title {
+    font-size: 22px;
+    right: 16px;
+  }
+}

@@ -136,7 +136,10 @@ async function renderArticle(post) {
     const titleMatch = markdown.match(/^# (.+)$/m);
     const title = titleMatch ? titleMatch[1] : 'Untitled';
     markdown = markdown.replace(/^# .+$/m, '');
-    const html = parseMarkdown(markdown);
+    const html = parseMarkdown(markdown).replace(
+      /<table>([\s\S]*?)<\/table>/g,
+      '<div class="table-wrap"><table>$1</table></div>'
+    );
     
     postsContainer.innerHTML = `
       <div class="article-view">
