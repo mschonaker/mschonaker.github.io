@@ -4,8 +4,8 @@
     "type": "article",
     "file": "_posts/memoized-prefill-llm-router.md",
     "timestamp": 1790467200,
-    "summary": "Run a small causal model as a search-pipeline decision engine by prefilling the instructions once, caching the KV state as a versioned file, and probing logits instead of generating text. Benchmarked against Laya, an encoder decision model, on the same task.",
-    "image": null,
+    "summary": "Run a small causal model as a search-pipeline decision engine by prefilling the instructions once, caching the KV state as versioned files, and probing logits instead of generating text. Benchmarked against Laya, an encoder decision model, in English and Spanish.",
+    "image": "/images/memoized-prefill-llm-router.jpg",
     "tags": [
       "ai",
       "ml",

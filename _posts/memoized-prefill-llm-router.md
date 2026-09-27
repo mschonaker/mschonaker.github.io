@@ -1,20 +1,21 @@
 ---
 id: llm001
 title: "Memoized Prefill: LLM Routing with Cached Attention State"
-summary: Run a small causal model as a search-pipeline decision engine by prefilling the instructions once, caching the KV state as a versioned file, and probing logits instead of generating text. Benchmarked against Laya, an encoder decision model, on the same task.
+summary: Run a small causal model as a search-pipeline decision engine by prefilling the instructions once, caching the KV state as versioned files, and probing logits instead of generating text. Benchmarked against Laya, an encoder decision model, in English and Spanish.
 date: 2026-09-27
 tags: ai, ml, python
+image: /images/memoized-prefill-llm-router.jpg
 ---
 
 # Memoized Prefill: LLM Routing with Cached Attention State
 
-An ecommerce search engine gets queries like `shoes under 10`, `nike air force 1`, or `gift for wife birthday`. Each one must decide: extract a price facet? run brand NER? enable fuzzy matching? use the hybrid vector route? If one wanted a single model to answer all of these per query, in one shot — where adding a new brand or a new question never means retraining — a classifier does not fit: every new question is a new training run. A hosted decision model (Jev, or its open-source clone Laya) fits the task but recomputes the full instruction block on every query. A causal language model can do better: its attention states for a fixed prefix do not depend on what comes after the prefix. Prefill is therefore a pure function of the prompt text — so compute it once, store the KV state, key it by a hash of that text, and reuse it. That is memoization, and the industry knows its runtime form as prompt caching or automatic prefix caching [1][2]. Here the memo ships as versioned files instead of living in a warm cache. Every question is answered by reading logits at probe positions; no text is generated. This post documents the prototype, the prefill/server split, and a measured comparison with Laya.
+An ecommerce search engine gets queries like `shoes under 10`, `nike air force 1`, or `gift for wife birthday`. Each one must decide: extract a price facet? run brand NER? enable fuzzy matching? use the hybrid vector route? If one wanted a single model to answer all of these per query, in one shot — where adding a new brand or a new question never means retraining — a classifier does not fit: every new question is a new training run. A hosted decision model (Jev, or its open-source clone Laya) fits the task but recomputes the full instruction block on every query. A causal language model can do better: its attention states for a fixed prefix do not depend on what comes after the prefix. Prefill is therefore a pure function of the prompt text — so compute it once, store the KV state, key it by a hash of that text, and reuse it. That is memoization, and the industry knows its runtime form as prompt caching or automatic prefix caching. Here the memo ships as versioned files instead of living in a warm cache. Every question is answered by reading logits at probe positions; no text is generated. This post documents the prototype, the prefill/serve split, and a measured comparison with Laya.
 
 ## The engine
 
 Two files, sharing nothing but the artifact directory. `memoize.py` prefills the instruction block once, fits one decision threshold per question against labeled queries, and writes the KV state to disk as plain tensors. `server.py` reads the directory back, verifies a hash of the instructions against the state, and answers queries — it never runs a prefill pass.
 
-The core of every question is the probe: the query plus a short marker (`PRICE? Answer:`, `BRAND? Answer:`) appended after the memoized state; the yes/no probabilities are read from the logits at the marker's final token (`memoize.py`, lines 112–121). This is the pattern LLM rerankers use — classification from first-token logits of a causal model, with no decode loop [3]. Scoring a multi-word option (the `choice` primitive) means teacher-forcing the option tokens and summing their log-probabilities: one probe pass per option.
+The core of every question is the probe: the query plus a short marker (`PRICE? Answer:`, `BRAND? Answer:`) appended after the memoized state; the yes/no probabilities are read from the logits at the marker's final token (`memoize.py`, lines 113–122). This is the pattern LLM rerankers use — classification from first-token logits of a causal model, with no decode loop. Scoring a multi-word option (the `choice` primitive) means teacher-forcing the option tokens and summing their log-probabilities: one probe pass per option.
 
 ## memoize.py
 
@@ -81,9 +82,10 @@ Rules:
 - FUZZY is no when every word is a correctly spelled common word or known brand.
 - FUZZY is yes when a word looks misspelled or is an unknown brand spelling.
 - LOCATION is yes when a city, country, or region name appears in the query.
-- CATEGORY is yes when the query names a product type from the categories
-  above, directly or as a common synonym ("runners", "trainers").
-- CATEGORY is no when the query names no product type at all.
+- CATEGORY is yes when the whole user query looks like a product category
+  name or a plain category phrase: "sneakers", "running shoes", "trail boots".
+- CATEGORY is no when the query adds anything beyond a category phrase: a
+  price, a brand, a place, or a described need, recipient, or occasion.
 - HYBRID is yes when the query describes a need, recipient, occasion, or use
   beyond naming products: "for my wife", "birthday", "long walks".
 - HYBRID is no when the query only names product types, brands, model numbers,
@@ -101,20 +103,20 @@ QUESTIONS = {
 
 # toy labeled set; production uses hundreds of log-mined decisions
 LABELS = {
-    "shoes under 10":               {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
-    "running shoes cheaper than 50": {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
-    "nike air force 1":             {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
-    "addidass ultraboost":          {"PRICE": 0, "BRAND": 1, "FUZZY": 1, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
-    "running shoes from berlin":    {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "HYBRID": 1, "CATEGORY": 1},
+    "shoes under 10":               {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "running shoes cheaper than 50": {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "nike air force 1":             {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "addidass ultraboost":          {"PRICE": 0, "BRAND": 1, "FUZZY": 1, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "running shoes from berlin":    {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "HYBRID": 1, "CATEGORY": 0},
     "sneakers":                     {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
     "gift for wife birthday":       {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 0},
-    "comfortable shoes for long walks": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 1},
-    "iphone 15 pro max":            {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
+    "comfortable shoes for long walks": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 0},
+    "iphone 15 pro max":            {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
     "womanss handbagg":             {"PRICE": 0, "BRAND": 0, "FUZZY": 1, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
-    "boots from madrid":            {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "HYBRID": 1, "CATEGORY": 1},
-    "cheap sandals":                {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
-    "hoka clotree for muddy trails": {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 1},
-    "laptop under 3000 for student": {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 1},
+    "boots from madrid":            {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "HYBRID": 1, "CATEGORY": 0},
+    "cheap sandals":                {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "hoka clotree for muddy trails": {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 0},
+    "laptop under 3000 for student": {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 0},
 }
 
 def main():
@@ -294,23 +296,21 @@ if __name__ == "__main__":
     main()
 ```
 
-Run `python memoize.py` once per instruction version — a full run takes seconds, including threshold fitting. Deploy: ship the `memo/` directory, run `server.py`. Editing the prompt (adding a brand, a category, a question) means rerunning `memoize.py`; the server picks up the new artifact or refuses the mismatched one.
+Run `python memoize.py` once per instruction version. Deploy: ship the `memo/` directory, run `server.py`. Editing the prompt (adding a brand, a category, a question) means rerunning `memoize.py`; the server picks up the new artifact or refuses the mismatched one.
 
 ## The numbers
 
 One host — a modern 12-core laptop-class machine with its integrated GPU, no batch queueing.
 
-- **Re-memoize:** ~70 ms for a 648-token instruction block. The memo on disk: 56 files, 18.7 MB.
+- **Re-prefill:** 296 ms for the 673-token instruction block on Qwen2.5-1.5B, fp16. The memo on disk: 56 files, 19.4 MB.
 - **Server startup:** ~50 ms, zero prefill.
-- **Decide (6 questions, one batched forward):** 82 ms. The instruction block grew 180 → 648 tokens across experiments; per-query cost barely moved. That is the whole point of the memoized prefill.
+- **Decide (6 questions, one batched forward):** 82 ms, measured stable from a 648-token memo to a 673-token one — instruction tokens are never recomputed, so instruction growth is free at query time.
 - **Determinism:** repeated runs are bit-identical, and a second process reading the artifact files reproduces the same probabilities.
 - **Extension:** a new question is an edit to the rules text plus a re-prefill. No training, no new model.
 
 ## Comparison with Laya
 
-Laya is the open-source, Apache-licensed clone of the Jev decision model: a ModernBERT-base encoder (421M params) that answers typed questions — `noul`, `choice`, `score` — in one forward pass [4]. It is the natural rival: same task semantics, opposite architecture. An encoder is bidirectional, so every position depends on every other; there is no prefix to memoize. Laya re-encodes the instruction block on every query, which is exactly what the memoized prefill removes.
-
-Same task, same fixed prompt, same host, six queries × six decisions. The complete comparison script:
+Laya is the open-source, Apache-licensed clone of the Jev decision model: a ModernBERT-base encoder (421M params) that answers typed questions — `noul`, `choice`, `score` — in one forward pass. It is the natural rival: same task semantics, opposite architecture. An encoder is bidirectional, so every position depends on every other; there is no prefix to memoize. Laya re-encodes the instruction block on every query, which is exactly what the memoized prefill removes. The comparison script, same six queries, same six decisions, same gold labels:
 
 ```python
 #!/usr/bin/env python
@@ -318,81 +318,81 @@ Same task, same fixed prompt, same host, six queries × six decisions. The compl
 # requires-python = ">=3.10"
 # dependencies = ["laya"]
 # ///
-"""Router task through Laya, fixed prompt. Same six queries as the causal
-batched script. Usage: laya_router_task.py [english|typed-decisions]"""
-import sys
-import time
+"""Router task through Laya: same queries and gold labels as the causal
+engine. Usage: laya_router_task.py [english|typed-decisions]
+"""
+import sys, time
 from laya import Router
-
-BRANDS = ("Nike, Adidas, Puma, Asics, New Balance, Salomon, Decathlon, Reebok, "
-          "Under Armour, Fila, Mizuno, Brooks, Saucony, Hoka, On, Merrell, "
-          "The North Face, Columbia, Patagonia, Apple, Samsung, Sony, LG, "
-          "Bosch, Philips, Xiaomi, Dell, HP, Lenovo, Logitech, JBL, Bose, "
-          "Zara, H&M, Uniqlo, Gap, Levi's, IKEA, Tommy Hilfiger, Lacoste")
-CATEGORIES = ("shoes, sandals, boots, sneakers, slippers, jackets, coats, "
-              "hoodies, t-shirts, jeans, dresses, backpacks, handbags, watches, "
-              "headphones, earbuds, speakers, phones, tablets, laptops, "
-              "televisions, vacuums, cookware, bikes")
-
 QUESTIONS = {
-    "PRICE":    {"type": "noul", "instructions":
-        "Does the query bound a price, for example 'under 10', 'cheap', '50 to 100'?"},
-    "BRAND":    {"type": "noul", "instructions":
-        f"Does the query mention or hint one of these brands, including a "
-        f"misspelled brand? Brands: {BRANDS}"},
-    "FUZZY":    {"type": "noul", "instructions":
-        "Does a word in the query look misspelled or an unknown brand spelling? "
-        "No when every word is a correctly spelled common word or known brand."},
-    "LOCATION": {"type": "noul", "instructions":
-        "Does a city, country, or region name appear in the query?"},
-    "CATEGORY": {"type": "noul", "instructions":
-        f"Does the query name a product type, directly or as a common synonym "
-        f"like 'runners' or 'trainers'? Categories include: {CATEGORIES}"},
-    "HYBRID":   {"type": "noul", "instructions":
-        "Does the query describe a need, recipient, occasion, or use beyond "
-        "naming products, for example 'for my wife', 'birthday', 'long walks'? "
-        "No when the query only names product types, brands, model numbers, "
-        "colors, sizes, or prices."},
+    "PRICE":    {"type": "noul", "instructions": "Does the query bound a price, for example 'under 10', 'cheap', '50 to 100'?"},
+    "BRAND":    {"type": "noul", "instructions": "Does the query mention or hint one of these brands, including a misspelled brand? Brands: Nike, Adidas, Puma, Asics, New Balance, Salomon, Decathlon, Reebok, Apple, Samsung, Sony, Xiaomi, Lenovo"},
+    "FUZZY":    {"type": "noul", "instructions": "Does a word in the query look misspelled or an unknown brand spelling? No when every word is a correctly spelled common word or known brand."},
+    "LOCATION": {"type": "noul", "instructions": "Does a city, country, or region name appear in the query?"},
+    "CATEGORY": {"type": "noul", "instructions": "Is the whole query a product category name or plain category phrase, like 'sneakers' or 'running shoes', with nothing else added? No when the query adds a price, brand, place, or a described need or occasion."},
+    "HYBRID":   {"type": "noul", "instructions": "Does the query describe a need, recipient, occasion, or use beyond naming products, for example 'for my wife', 'birthday', 'long walks'? No when the query only names product types, brands, model numbers, colors, sizes, or prices."},
 }
-
-QUERIES = ["shoes under 10", "nike air force 1", "addidass ultraboost",
-           "running shoes from berlin", "sneakers", "gift for wife birthday"]
-
-model = sys.argv[1] if len(sys.argv) > 1 else "english"
+GOLD = {
+    "shoes under 10":     {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "nike air force 1":   {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "addidass ultraboost": {"PRICE": 0, "BRAND": 1, "FUZZY": 1, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
+    "running shoes from berlin": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "HYBRID": 1, "CATEGORY": 0},
+    "sneakers":           {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
+    "gift for wife birthday": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 0},
+}
 r = Router()
-lat, probs = [], {}
-for q in QUERIES:
+model = sys.argv[1] if len(sys.argv) > 1 else None
+lat = []
+hit = tot = 0
+for q, gold in GOLD.items():
     t0 = time.perf_counter()
-    res = r.predict(q, QUESTIONS,
-                    model=("typed-decisions" if model == "typed-decisions" else None))
+    res = r.predict(q, QUESTIONS, model=(model if model != "auto" else None))
     lat.append((time.perf_counter() - t0) * 1000)
-    probs[q] = {k: v["noul"] for k, v in res["answers"].items()}
-
-print(f"checkpoint={model} p50={sorted(lat)[len(lat)//2]:.0f} ms")
-for q in QUERIES:
-    print(f"{q!r:35s} " + " ".join(f"{n}={probs[q][n]:.2f}" for n in QUESTIONS))
+    p = {k: v["noul"] for k, v in res["answers"].items()}
+    cells = []
+    for n, g in gold.items():
+        ok = int(p[n] >= 0.5) == g
+        hit, tot = hit + ok, tot + 1
+        cells.append(f"{n[:3]}={p[n]:.2f}" + ("" if ok else "*"))
+    print(f"  {q:28s} " + " ".join(cells))
+print(f"laya accuracy @0.5 (fixed CATEGORY rule): {hit}/{tot} | p50 {sorted(lat)[len(lat)//2]:.0f} ms")
 ```
 
-| | memoized prefill (Qwen2.5-1.5B) | Laya (english) | Laya (typed-decisions) |
-|---|---|---|---|
-| latency, 6 questions | **82 ms** | 145 ms | 144 ms |
-| accuracy @ threshold 0.5 | 23/36 | **27/36** | 27/36 |
-| RAM | 3.1 GB | **0.85 GB** | 0.85 GB |
-| sees `addidass` as a brand | **yes (P=0.99)** | no (P=0.01) | no (P=0.17) |
-| says yes too often | **yes, badly** (LOCATION 0.87 on `shoes under 10`) | no | compressed near 0.5 |
-| new question = | edit text + re-prefill | edit text (free) | edit text (free) |
-| deterministic reruns | **identical, measured** | batch-shape sensitive (their README notes it) | — |
+| | memoized prefill (Qwen2.5-1.5B) | Laya (english) |
+|---|---|---|
+| latency, 6 questions | 82 ms | 88 ms |
+| accuracy @ threshold 0.5 | 20/36 | **27/36** |
+| RAM | 3.1 GB | **0.85 GB** |
+| sees `addidass` as a brand | **yes (P=1.00)** | no (P=0.34) |
+| misses `shoes under 10` as a price | no (P=0.92) | **yes (P=0.30)** |
+| says yes too often | **yes, badly** (CATEGORY fires on 5 of 6 queries) | mildly |
+| new question = | edit text + re-prefill | edit text (free) |
+| deterministic reruns | **identical, measured** | batch-shape sensitive (their README notes it) |
 
-Two honest results. First, the prediction that the memoized prefill would win latency on large prompts was right, and it already wins at a 650-token prompt — earlier, at small prompts, Laya looked like the favorite; on the same fixed prompt it loses by ~1.7×. Second, **neither engine is calibrated**. Laya's probabilities cluster in 0.1–0.3 (fitted thresholds on the same data lift its mean balanced accuracy from 0.23 to 0.80); the causal model inflates toward yes and fits unstable thresholds on a toy label set. Both are ranking-informative and scale-garbage. The `typed-decisions` checkpoint — Laya's RLCD-tuned variant — was tried and is not better here: same 27/36, but its probabilities compress into 0.17–0.64, so a missing brand (`addidass`) now scores 0.17 instead of 0.01: still wrong, just more confident about being wrong. It is tuned for its own shipped workflows, not for a custom question set. The real bottleneck is labels, not architecture: per-question thresholds need hundreds of log-mined decisions, which a search engine has lying around.
+The latency comparison carries its own experiment. Laya's first run scored 145 ms: its question bank carried a 38-brand list plus a category enumeration re-encoded on every query. Trimming those to a 13-brand bank took Laya to 88 ms — while the memoized engine sat at ~82 ms through the same edits and through *growing* its instruction block from 648 to 673 tokens. Per-query cost for an encoder scales with instructions; for a memoized prefix, instructions are free after the re-prefill.
+
+Quality is the honest counterweight: Laya wins @0.5 (27/36 vs 20/36). Both engines fail on different probes — Laya is blind to the misspelled brand and soft on the price probe; the causal model says yes to nearly every abstract test (`CATEGORY` 0.93–0.97 where the gold is no). Neither is calibrated: fitted thresholds on a toy set lift both, and the fitted numbers themselves swing (0.10, 0.84, 0.94 across runs) — the classic signature of too few labels. The RLCD-tuned `laya-typed-decisions` checkpoint was tried too and is a null result here: same 27/36, but every probability compresses into 0.06–0.76, so the misspelled-brand error survives at P=0.49 — still wrong, just more confident about being wrong. The real bottleneck is labels, not architecture: per-question thresholds need hundreds of log-mined decisions, which a search engine has lying around.
 
 ## The prompt lesson
 
-The first version asked: `"Does the query need semantic vector search? Answer:"` — and answered `yes` (0.96) for `sneakers`, a single keyword. The model was not confused about English; it was asked about *the retrieval internals*, which no token in the query carries. Rewriting toward observable surface properties helped: `CATEGORY` ("does the query name a product type?") now separates `sneakers` (0.97) from `gift for wife birthday` — except the causal model now fails that one (0.92, wrong), and `HYBRID` still says yes to `sneakers`. Ask about the query, not about the pipeline, is necessary but not sufficient at 1.5B. This is the open failure, and it is probably the fine-tuning-shaped hole, not the prompt-shaped one.
+The first version asked: `"Does the query need semantic vector search? Answer:"` — and answered `yes` (0.96) for `sneakers`, a single keyword. The model was not confused about English; it was asked about *the retrieval internals*, which no token in the query carries. Rewriting toward observable surface properties fixed that class of error and exposed the next one: tightening `CATEGORY` to "is the **whole** query a category phrase" made Laya cleanly correct on four of six negatives, while the causal model saturated to yes (0.93–0.97 everywhere). Ask about the query, not about the pipeline — and when a rule is right and the 1.5B model still cannot apply it, that is a model-capacity hole, closable with labels and calibration, not prose.
+
+## Spanish probes
+
+Qwen2.5's 151,936-token vocabulary is about 15% of the 1.5B model's parameters — the multilingual prior is paid for in weight bytes. What does that buy, and what does memoization add on top? Same engine, translated gold queries; the English memo probed with English markers, then one 266-token Spanish re-prefill used as a second memo:
+
+| probe (Spanish query) | English memo | Spanish memo (one re-prefill) | Laya (auto-routed) | Laya (multilingual) |
+|---|---|---|---|---|
+| LOCATION `botas de madrid` (yes) | 1.00 ✓ | 1.00 ✓ | **0.10 ✗** | **0.01 ✗** |
+| LOCATION `tenis para correr` (no) | 0.70 ✗ | **0.11 ✓** | 0.07 ✓ | 0.01 ✓ |
+| PRICE `zapatos por menos de 10` (yes) | 0.98 ✓ | 1.00 ✓ | 0.88 ✓ | **0.04 ✗** |
+| HYBRID `regalo para el cumpleanos de mi esposa` (yes) | 0.93 ✓ | 0.94 ✓ | **0.49 ✗** | **0.49 ✗** |
+
+Three takeaways. The translated memo fixes what the English memo gets wrong in Spanish (LOCATION went from "yes everywhere" to clean separation) — one prefill, no training, and the artifact is just another versioned file. Laya's script-based language router sent four of the five Spanish keyword queries to the **english** checkpoint (its documented weakness: short Latin-script text carries little language signal) — and that checkpoint missed the place name too; forcing the multilingual checkpoint is not the rescue it advertises: it failed PRICE at 0.04 and hallucinated BRAND=0.91 on a query containing no brand. And the memoized engine is still uncalibrated in Spanish, exactly as in English: the abstract probes saturate to yes (the Spanish memo scored 14/20 vs 11/20 on the English-memo subset). Language, like brands, is prompt data — the memoization design makes both a re-prefill away.
 
 ```mermaid
 flowchart LR
     subgraph prefill_step [prefill step, per version]
-        P[instructions.txt] --> K[prefill once] --> S[648-token KV state]
+        P[instructions.txt] --> K[prefill once] --> S[673-token KV state]
     end
     subgraph artifact [files on disk]
         S2[56 state files] --- V[version hash]
@@ -406,18 +406,18 @@ flowchart LR
 
 ## What this is not
 
-A production system. The label sets are toy (14 queries), the accuracy tables are 36 decisions, the thresholds are fitted in-sample, and the causal model still hallucinates yes. What it does establish: the memoized-prefill architecture works end-to-end in two self-contained PyTorch files, is deterministic by construction, extends by editing text, and is already competitive on latency with a specialist encoder while keeping the property the decision engine exists for — new rules are a string edit, not a training run.
+A production system. The label sets are toy (14 English + 5 Spanish queries), the accuracy tables are 36 decisions, the thresholds are fitted in-sample, and the causal model still hallucinates yes. What it does establish: the memoized-prefill architecture works end-to-end in two self-contained PyTorch files, is deterministic by construction, extends by editing text (languages included), and is roughly at latency parity with a specialist encoder that uses a quarter of the RAM — with a cost curve that keeps flattening as instructions grow.
 
 ## References
 
-Official sources:
-- [1] vLLM, *Automatic Prefix Caching*, docs.vllm.ai — KV reuse for shared prefixes across requests
-- [2] vLLM, *Batch Invariance*, docs.vllm.ai — the deterministic-serving problem for engines like vLLM (beta as of writing)
-- [3] vLLM, *Classification usage* — prompt logit scoring on causal models (the probe pattern)
-- [4] NandhaKishorM, *Laya*, github.com/NandhaKishorM/laya; checkpoints `convaiinnovations/laya` and `laya-typed-decisions` on Hugging Face; README benchmarks against TypeSafe's hosted Jev decision API
-- Qwen Team, *Qwen2.5 model cards*, huggingface.co/Qwen/Qwen2.5-1.5B-Instruct
-- Hugging Face, *transformers: DynamicCache and the KV-cache API*, huggingface.co/docs/transformers
+**Official sources:**
+- [Automatic Prefix Caching](https://docs.vllm.ai/en/latest/features/automatic_prefix_caching) — vLLM's runtime form of KV reuse for shared prefixes
+- [Classification usage](https://docs.vllm.ai/en/stable/models/pooling_models/classify) — vLLM's prompt logit scoring, the probe pattern
+- [Batch Invariance](https://docs.vllm.ai/en/latest/features/batch_invariance) — why determinism is hard for continuously-batched engines (beta as of writing)
+- [Laya repository](https://github.com/NandhaKishorM/laya) with the [english](https://huggingface.co/convaiinnovations/laya) and [typed-decisions](https://huggingface.co/convaiinnovations/laya-typed-decisions) checkpoints; its README also documents TypeSafe's hosted Jev API
+- [Qwen2.5-1.5B-Instruct model card](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct)
+- [KV caches in transformers](https://huggingface.co/docs/transformers/kv_cache) — the DynamicCache API
 
-Ecosystem sources, for context only:
-- Deepset Haystack docs, *Query Classifier pipelines* — learned query routing as a pipeline pattern
-- Arabzadeh et al., *Predicting Efficiency/Effectiveness Trade-offs for Dense vs. Sparse Retrieval*, CIKM 2021 — the router idea in the research literature
+**Ecosystem sources, for context only:**
+- [Query classifier for neural search](https://www.deepset.ai/blog/save-resources-with-query-classifier-for-neural-search) — deepset; learned routing as a pipeline node
+- [Predicting Efficiency/Effectiveness Trade-offs for Dense vs. Sparse Retrieval](https://arxiv.org/abs/2109.10739) — Arabzadeh et al., CIKM 2021; the router idea in the research literature
