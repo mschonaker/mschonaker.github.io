@@ -68,13 +68,15 @@ Rules:
   colors, sizes, or prices, with no described need, recipient, occasion, or use.
 """
 
+SEMANTIC = {}   # set {"NOPLACE": "LOCATION", ...} to flip a probe's decision side
+
 QUESTIONS = {
-    "PRICE":    ["PRICE? Answer:", 0.5],
-    "BRAND":    ["BRAND? Answer:", 0.5],
-    "FUZZY":    ["FUZZY? Answer:", 0.5],
-    "LOCATION": ["LOCATION? Answer:", 0.5],
-    "HYBRID":   ["HYBRID? Answer:", 0.5],
-    "CATEGORY": ["CATEGORY? Answer:", 0.5],
+    "PRICE":    ["PRICE? Answer:", 0.5, False],
+    "BRAND":    ["BRAND? Answer:", 0.5, False],
+    "FUZZY":    ["FUZZY? Answer:", 0.5, False],
+    "LOCATION": ["LOCATION? Answer:",   0.5, False],
+    "HYBRID":   ["HYBRID? Answer:",     0.5, False],
+    "CATEGORY": ["CATEGORY? Answer:",   0.5, False],
 }
 
 # toy labeled set; production uses hundreds of log-mined decisions
@@ -122,14 +124,16 @@ def main():
         return float(torch.softmax(logits[[yes, no]].float(), -1)[0])
 
     # one threshold per question: balanced-accuracy sweep over the labels
-    probs = {q: {n: probe(q, m) for n, (m, _) in QUESTIONS.items()} for q in LABELS}
+    probs = {q: {n: probe(q, m) for n, (m, _, _) in QUESTIONS.items()} for q in LABELS}
     for name in QUESTIONS:
-        pts = [(probs[q][name], g[name]) for q, g in LABELS.items() if name in g]
+        sem = SEMANTIC.get(name, name)
+        pts = [(probs[q][name], g[sem]) for q, g in LABELS.items() if sem in g]
         n1 = sum(1 for _, g in pts if g) or 1
         n0 = sum(1 for _, g in pts if not g) or 1
+        flipped = QUESTIONS[name][2]
         best = max([i / 100 for i in range(10, 96)],
-                   key=lambda t: 0.5 * (sum(int(p >= t) for p, g in pts if g) / n1
-                                        + sum(int(p < t) for p, g in pts if not g) / n0))
+                   key=lambda t: 0.5 * (sum(int((p >= t) != flipped) == g for p, g in pts if g) / n1
+                                        + sum(int((p >= t) != flipped) == g for p, g in pts if not g) / n0))
         QUESTIONS[name][1] = best
         print(f"  {name:9s} threshold={best:.2f}")
 

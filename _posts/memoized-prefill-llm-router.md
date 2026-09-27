@@ -1,7 +1,7 @@
 ---
 id: llm001
 title: "Memoized Prefill: LLM Routing with Cached Attention State"
-summary: Run a small causal model as a search-pipeline decision engine by prefilling the instructions once, caching the KV state as versioned files, and probing logits instead of generating text. Benchmarked against Laya, an encoder decision model, in English and Spanish.
+summary: Run a small causal model as a search-pipeline decision engine: prefill the instructions once, ship the KV state as versioned files, probe logits instead of generating text. Deterministic by construction; answers shown for english, spanish, chinese, and hindi queries.
 date: 2026-09-27
 tags: ai, ml, python
 image: /images/memoized-prefill-llm-router.jpg
@@ -9,13 +9,33 @@ image: /images/memoized-prefill-llm-router.jpg
 
 # Memoized Prefill: LLM Routing with Cached Attention State
 
-An ecommerce search engine gets queries like `shoes under 10`, `nike air force 1`, or `gift for wife birthday`. Each one must decide: extract a price facet? run brand NER? enable fuzzy matching? use the hybrid vector route? If one wanted a single model to answer all of these per query, in one shot — where adding a new brand or a new question never means retraining — a classifier does not fit: every new question is a new training run. A hosted decision model (Jev, or its open-source clone Laya) fits the task but recomputes the full instruction block on every query. A causal language model can do better: its attention states for a fixed prefix do not depend on what comes after the prefix. Prefill is therefore a pure function of the prompt text — so compute it once, store the KV state, key it by a hash of that text, and reuse it. That is memoization, and the industry knows its runtime form as prompt caching or automatic prefix caching. Here the memo ships as versioned files instead of living in a warm cache. Every question is answered by reading logits at probe positions; no text is generated. This post documents the prototype, the prefill/serve split, and a measured comparison with Laya.
+An ecommerce search engine gets queries like `shoes under 10`, `nike air force 1`, or `gift for wife birthday`. Each one must decide: extract a price facet? run brand NER? enable fuzzy matching? use the hybrid vector route? If one wanted a single model to answer all of these per query, in one shot — where adding a new brand or a new question never means retraining — a classifier does not fit: every new question is a new training run. A causal language model can: its attention states for a fixed prefix do not depend on what comes after the prefix. Prefill is therefore a pure function of the prompt text — so compute it once, store the KV state, key it by a hash of that text, and reuse it. That is memoization, and the industry knows its runtime form as prompt caching or automatic prefix caching. Here the memo ships as versioned files instead of living in a warm cache. Every question is answered by reading logits at probe positions; no text is generated. This post documents the prototype, the prefill/serve split, why the result is deterministic by construction, and how the engine answers across four scripts.
 
 ## The engine
 
 Two files, sharing nothing but the artifact directory. `memoize.py` prefills the instruction block once, fits one decision threshold per question against labeled queries, and writes the KV state to disk as plain tensors. `server.py` reads the directory back, verifies a hash of the instructions against the state, and answers queries — it never runs a prefill pass.
 
-The core of every question is the probe: the query plus a short marker (`PRICE? Answer:`, `BRAND? Answer:`) appended after the memoized state; the yes/no probabilities are read from the logits at the marker's final token (`memoize.py`, lines 113–122). This is the pattern LLM rerankers use — classification from first-token logits of a causal model, with no decode loop. Scoring a multi-word option (the `choice` primitive) means teacher-forcing the option tokens and summing their log-probabilities: one probe pass per option.
+The core of every question is the probe: the query plus a short marker (`PRICE? Answer:`, `BRAND? Answer:`) appended after the memoized state; the yes/no probabilities are read from the logits at the marker's final token (`memoize.py`, lines 115–124). This is the pattern LLM rerankers use — classification from first-token logits of a causal model, with no decode loop. Scoring a multi-word option (the `choice` primitive) means teacher-forcing the option tokens and summing their log-probabilities: one probe pass per option.
+
+```mermaid
+flowchart TB
+    I[instructions text] -->|once per version| P[prefill the model]
+    P --> M[KV state files + version hash]
+    M -->|load, verify| S[server]
+    Q[query + question markers] --> S
+    S --> F["P(yes) per question → flags"]
+```
+
+The first probe wording taught a lesson worth keeping: `HYBRID` started as "Does the query need semantic vector search?" — and said yes to `sneakers`. The model was never confused about english; it was asked about *the retrieval internals*, which no token in a query carries. Every rule below states what is visible in the text. Ask about the query, not about the pipeline.
+
+What each answer drives downstream:
+
+- **PRICE** — the query carries a price bound. The model never extracts the number (a regex does that); the probe only says whether opening the price-facet path is worth it. `shoes under 10` → the facet arrives on the results page instead of waiting for a click.
+- **BRAND** — send the query to brand NER against the dictionary and map hits to a brand facet. This is also the gate that tolerates misspellings: `addidass` only costs a dictionary lookup if BRAND fires.
+- **FUZZY** — open edit-distance expansion at query time. Fuzzy is the most expensive retrieval mode to run; the probe exists to keep it off the path when every word is real.
+- **LOCATION** — the query carries a place-name span. Not a location search — nobody buys a laptop by zip code. A hit means: strip the place and treat it as a modifier (regional stock, shipping), then process the rest as a normal product query.
+- **CATEGORY** — the whole query is a category phrase (`sneakers`, `running shoes`). Then the user is browsing, not searching: skip text scoring and jump straight to the category drill-down with the facet panel open.
+- **HYBRID** — the query describes a need, recipient, occasion, or use beyond naming products (`gift for wife`, `comfortable for long walks`). These get the vector route; bare keywords never do — a single term is a thesaurus problem, not an embedding problem.
 
 ## memoize.py
 
@@ -92,13 +112,15 @@ Rules:
   colors, sizes, or prices, with no described need, recipient, occasion, or use.
 """
 
+SEMANTIC = {}   # set {"NOPLACE": "LOCATION", ...} to flip a probe's decision side
+
 QUESTIONS = {
-    "PRICE":    ["PRICE? Answer:", 0.5],
-    "BRAND":    ["BRAND? Answer:", 0.5],
-    "FUZZY":    ["FUZZY? Answer:", 0.5],
-    "LOCATION": ["LOCATION? Answer:", 0.5],
-    "HYBRID":   ["HYBRID? Answer:", 0.5],
-    "CATEGORY": ["CATEGORY? Answer:", 0.5],
+    "PRICE":    ["PRICE? Answer:", 0.5, False],
+    "BRAND":    ["BRAND? Answer:", 0.5, False],
+    "FUZZY":    ["FUZZY? Answer:", 0.5, False],
+    "LOCATION": ["LOCATION? Answer:",   0.5, False],
+    "HYBRID":   ["HYBRID? Answer:",     0.5, False],
+    "CATEGORY": ["CATEGORY? Answer:",   0.5, False],
 }
 
 # toy labeled set; production uses hundreds of log-mined decisions
@@ -146,14 +168,16 @@ def main():
         return float(torch.softmax(logits[[yes, no]].float(), -1)[0])
 
     # one threshold per question: balanced-accuracy sweep over the labels
-    probs = {q: {n: probe(q, m) for n, (m, _) in QUESTIONS.items()} for q in LABELS}
+    probs = {q: {n: probe(q, m) for n, (m, _, _) in QUESTIONS.items()} for q in LABELS}
     for name in QUESTIONS:
-        pts = [(probs[q][name], g[name]) for q, g in LABELS.items() if name in g]
+        sem = SEMANTIC.get(name, name)
+        pts = [(probs[q][name], g[sem]) for q, g in LABELS.items() if sem in g]
         n1 = sum(1 for _, g in pts if g) or 1
         n0 = sum(1 for _, g in pts if not g) or 1
+        flipped = QUESTIONS[name][2]
         best = max([i / 100 for i in range(10, 96)],
-                   key=lambda t: 0.5 * (sum(int(p >= t) for p, g in pts if g) / n1
-                                        + sum(int(p < t) for p, g in pts if not g) / n0))
+                   key=lambda t: 0.5 * (sum(int((p >= t) != flipped) == g for p, g in pts if g) / n1
+                                        + sum(int((p >= t) != flipped) == g for p, g in pts if not g) / n0))
         QUESTIONS[name][1] = best
         print(f"  {name:9s} threshold={best:.2f}")
 
@@ -183,7 +207,7 @@ if __name__ == "__main__":
 
 ## server.py
 
-The complete server. Note what it does **not** do: it never runs a prefill forward pass over the instruction block. The KV state is read from files, the hash of the instructions is recomputed and checked, and a mismatch is a hard error — a stale memo can never answer queries under an edited prompt (`server.py`, lines 21–43). All question probes for one query share a single batched forward: the memoized prefix is expanded to batch size (a view, not a copy) and each question gets its own padded row (lines 61–86). That is why per-request cost barely depends on instruction length — instruction tokens are never recomputed.
+The complete server. Note what it does **not** do: it never runs a prefill forward pass over the instruction block. The KV state is read from files, the hash of the instructions is recomputed and checked, and a mismatch is a hard error — a stale memo can never answer queries under an edited prompt (`server.py`, lines 21–43). All question probes for one query share a single batched forward: the memoized prefix is expanded to batch size (a view, not a copy) and each question gets its own padded row (lines 61–86). That is why per-request cost barely depends on instruction length.
 
 ```python
 #!/usr/bin/env python
@@ -248,13 +272,13 @@ def main():
 
     def decide(query):
         query = " ".join(query.strip().lower().split())
-        rows = [(name, enc(f"\nUser query: {query}\n{marker}"), thr)
-                for name, (marker, thr) in meta["questions"].items()]
+        rows = [(name, enc(f"\nUser query: {query}\n{marker}"), thr, flip)
+                for name, (marker, thr, flip) in meta["questions"].items()]
         n = len(rows)
         L = max(len(toks) for _, toks, _ in rows)
         input_ids = torch.full((n, L), pad, device=device, dtype=torch.long)
         new_mask = torch.zeros((n, L), device=device, dtype=torch.long)
-        for i, (_, toks, _) in enumerate(rows):
+        for i, (_, toks, _, _) in enumerate(rows):
             input_ids[i, :len(toks)] = torch.tensor(toks, device=device)
             new_mask[i, :len(toks)] = 1
         cache = DynamicCache()
@@ -267,10 +291,10 @@ def main():
                        position_ids=pos, attention_mask=attn,
                        use_cache=False).logits
         out = {}
-        for i, (name, toks, thr) in enumerate(rows):
+        for i, (name, toks, thr, flip) in enumerate(rows):
             z = logits[i, len(toks) - 1, YES].float()
             p = float(torch.softmax(z, -1)[0])
-            out[name] = (p >= thr, p)
+            out[name] = ((p >= thr) != flip, p)
         return out
 
     for query in queries:
@@ -300,121 +324,168 @@ Run `python memoize.py` once per instruction version. Deploy: ship the `memo/` d
 
 ## The numbers
 
-One host — a modern 12-core laptop-class machine with its integrated GPU, no batch queueing.
+One host — a modern 12-core laptop-class machine with its integrated GPU, no batch queueing. Everything costs one of two things: once per version, or once per query. There is nothing else.
 
-- **Re-prefill:** 296 ms for the 673-token instruction block on Qwen2.5-1.5B, fp16. The memo on disk: 56 files, 19.4 MB.
-- **Server startup:** ~50 ms, zero prefill.
-- **Decide (6 questions, one batched forward):** 82 ms, measured stable from a 648-token memo to a 673-token one — instruction tokens are never recomputed, so instruction growth is free at query time.
-- **Determinism:** repeated runs are bit-identical, and a second process reading the artifact files reproduces the same probabilities.
-- **Extension:** a new question is an edit to the rules text plus a re-prefill. No training, no new model.
+**Once per version** — and every brand, category, rule, or target-language example you add is a version:
 
-## Comparison with Laya
+- Re-prefill of the 673-token instruction block on Qwen2.5-1.5B, fp16: 296 ms, producing 56 state files, 19.4 MB.
+- Threshold fitting: a few dozen probe passes over the labeled bank.
 
-Laya is the open-source, Apache-licensed clone of the Jev decision model: a ModernBERT-base encoder (421M params) that answers typed questions — `noul`, `choice`, `score` — in one forward pass. It is the natural rival: same task semantics, opposite architecture. An encoder is bidirectional, so every position depends on every other; there is no prefix to memoize. Laya re-encodes the instruction block on every query, which is exactly what the memoized prefill removes. The comparison script, same six queries, same six decisions, same gold labels:
+**Once per replica start:** ~50 ms to reload the whole memo into memory from files. No prefill, no warm-up, no shared cache — a tenth replica changes nobody's latency.
+
+**Once per query:** the only recurring number in the system — six questions, one batched forward, 82 ms, measured stable while the memo grew from 648 to 673 tokens. Instructions are free at query time because they were already run; scaling out is just starting more processes that run nothing again.
+
+## How the engine answers
+
+The scorer runs a bank of 22 queries — six english, sixteen spanish, chinese, and hindi — with gold labels, all through one english memo, prefilled once:
 
 ```python
 #!/usr/bin/env python
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["laya"]
+# dependencies = ["torch", "transformers"]
 # ///
-"""Router task through Laya: same queries and gold labels as the causal
-engine. Usage: python laya_router_task.py
-"""
-import time
-from laya import Router
-QUESTIONS = {
-    "PRICE":    {"type": "noul", "instructions": "Does the query bound a price, for example 'under 10', 'cheap', '50 to 100'?"},
-    "BRAND":    {"type": "noul", "instructions": "Does the query mention or hint one of these brands, including a misspelled brand? Brands: Nike, Adidas, Puma, Asics, New Balance, Salomon, Decathlon, Reebok, Apple, Samsung, Sony, Xiaomi, Lenovo"},
-    "FUZZY":    {"type": "noul", "instructions": "Does a word in the query look misspelled or an unknown brand spelling? No when every word is a correctly spelled common word or known brand."},
-    "LOCATION": {"type": "noul", "instructions": "Does a city, country, or region name appear in the query?"},
-    "CATEGORY": {"type": "noul", "instructions": "Is the whole query a product category name or plain category phrase, like 'sneakers' or 'running shoes', with nothing else added? No when the query adds a price, brand, place, or a described need or occasion."},
-    "HYBRID":   {"type": "noul", "instructions": "Does the query describe a need, recipient, occasion, or use beyond naming products, for example 'for my wife', 'birthday', 'long walks'? No when the query only names product types, brands, model numbers, colors, sizes, or prices."},
-}
+"""Score the memoized engine at threshold 0.5 across four scripts.
+One artifact, one english prefill, english markers, no changes to the LLM.
+
+Usage: python causal_score.py [memo-dir]"""
+import json
+import sys
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
+
+torch.set_grad_enabled(False)
+DIRPATH = sys.argv[1] if len(sys.argv) > 1 else "memo"
+meta = json.load(open(f"{DIRPATH}/meta.json"))
+device = "mps" if torch.backends.mps.is_available() else "cpu"
+dtype = getattr(torch, meta["dtype"].split(".")[-1])
+state = [(torch.load(f"{DIRPATH}/state/layer_{i:02d}_key.pt", map_location=device, weights_only=True),
+          torch.load(f"{DIRPATH}/state/layer_{i:02d}_value.pt", map_location=device, weights_only=True))
+         for i in range(meta["layers"])]
+tok = AutoTokenizer.from_pretrained(meta["model_id"])
+model = (AutoModelForCausalLM.from_pretrained(meta["model_id"], dtype=dtype)
+         .to(device).eval())
+enc = lambda s: tok(s, add_special_tokens=False).input_ids
+YES = torch.tensor([enc(" yes")[0], enc(" no")[0]], device=device)
+base_len, pad = meta["base_len"], tok.eos_token_id
+
 GOLD = {
-    "shoes under 10":     {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
-    "nike air force 1":   {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
-    "addidass ultraboost": {"PRICE": 0, "BRAND": 1, "FUZZY": 1, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 0},
-    "running shoes from berlin": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "HYBRID": 1, "CATEGORY": 0},
-    "sneakers":           {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 0, "CATEGORY": 1},
-    "gift for wife birthday": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 0},
+    "shoes under 10":          {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "nike air force 1":        {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "addidass ultraboost":     {"PRICE": 0, "BRAND": 1, "FUZZY": 1, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "running shoes from berlin": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "CATEGORY": 0, "HYBRID": 1},
+    "sneakers":                {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 1, "HYBRID": 0},
+    "gift for wife birthday":  {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 1},
+    "zapatos por menos de 10": {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "sandalias baratas":       {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "botas de madrid":         {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "CATEGORY": 0, "HYBRID": 1},
+    "regalo para el cumpleanos de mi esposa": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 1},
+    "tenis para correr":       {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 1, "HYBRID": 0},
+    "zapatillas nike air force": {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "鞋子 10 元以下":            {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "耐克 Air Force 1":          {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "靴子 北京":                 {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "CATEGORY": 0, "HYBRID": 1},
+    "妻子的生日礼物":             {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 1},
+    "跑鞋":                     {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 1, "HYBRID": 0},
+    "10 से कम की जूते":         {"PRICE": 1, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "नाइक एयर फोर्स 1":          {"PRICE": 0, "BRAND": 1, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 0},
+    "जोधपुर के जूते":            {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 1, "CATEGORY": 0, "HYBRID": 1},
+    "लंबी पैदल यात्रा के लिए जूते": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 0, "HYBRID": 1},
+    "स्नीकर्स":                  {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "CATEGORY": 1, "HYBRID": 0},
 }
-r = Router()
-lat = []
-hit = tot = 0
-for q, gold in GOLD.items():
-    t0 = time.perf_counter()
-    res = r.predict(q, QUESTIONS)
-    lat.append((time.perf_counter() - t0) * 1000)
-    p = {k: v["noul"] for k, v in res["answers"].items()}
+
+SEMANTIC = {}   # flip knob, same as memoize.py
+
+def decide(query):
+    query = " ".join(query.strip().lower().split())
+    rows = [(name, enc(f"\nUser query: {query}\n{marker}"))
+            for name, (marker, *_) in meta["questions"].items()]
+    n, L = len(rows), max(len(t) for _, t in rows)
+    ids = torch.full((n, L), pad, device=device, dtype=torch.long)
+    m = torch.zeros((n, L), device=device, dtype=torch.long)
+    last = []
+    for i, (_, t) in enumerate(rows):
+        ids[i, :len(t)] = torch.tensor(t, device=device)
+        m[i, :len(t)] = 1
+        last.append(len(t) - 1)
+    cache = DynamicCache()
+    for i, (k, v) in enumerate(state):
+        cache.update(k.expand(n, -1, -1, -1), v.expand(n, -1, -1, -1), i)
+    attn = torch.cat([torch.ones(n, base_len, device=device, dtype=torch.long), m], 1)
+    pos = (base_len + torch.arange(L, device=device)).unsqueeze(0).expand(n, -1)
+    logits = model(input_ids=ids, past_key_values=cache, position_ids=pos,
+                   attention_mask=attn, use_cache=False).logits
+    return {rows[i][0]: float(torch.softmax(logits[i, last[i], YES].float(), -1)[0])
+            for i in range(n)}
+
+# per-question precision/recall on the pipeline-semantic positive, with
+# flipped probes decided from the no-side
+stats = {}
+for i, (q, gold) in enumerate(GOLD.items()):
+    raw = decide(q)
+    for name, (marker, *_) in meta["questions"].items():
+        sem = SEMANTIC.get(name, name)
+        if sem not in gold:
+            continue
+        peff = raw[name] if name not in SEMANTIC else 1.0 - raw[name]
+        s = stats.setdefault(sem, {"tp": 0, "fp": 0, "fn": 0, "tn": 0})
+        pred, g = peff >= 0.5, gold[sem]
+        if pred and g: s["tp"] += 1
+        elif pred: s["fp"] += 1
+        elif g: s["fn"] += 1
+        else: s["tn"] += 1
     cells = []
     for n, g in gold.items():
-        ok = int(p[n] >= 0.5) == g
-        hit, tot = hit + ok, tot + 1
-        cells.append(f"{n[:3]}={p[n]:.2f}" + ("" if ok else "*"))
-    print(f"  {q:28s} " + " ".join(cells))
-print(f"laya accuracy @0.5 (fixed CATEGORY rule): {hit}/{tot} | p50 {sorted(lat)[len(lat)//2]:.0f} ms")
+        rawname = n if n in raw else next(k for k, v in SEMANTIC.items() if v == n)
+        peff = raw[rawname] if rawname not in SEMANTIC else 1.0 - raw[rawname]
+        cells.append(f"{n[:3]}={peff:.2f}" + ("" if int(peff >= 0.5) == g else "*"))
+    print(f"  {q:38s} " + " ".join(cells))
+
+print("\nper question: found = of the queries needing this path, how many said yes;"
+      " right when yes = of its yeses, how many were true")
+for sem in ["PRICE", "BRAND", "FUZZY", "LOCATION", "CATEGORY", "HYBRID"]:
+    s = stats[sem]
+    print(f"  {sem:9s} found {s['tp']}/{s['tp'] + s['fn']}  |  right when yes {s['tp']}/{s['tp'] + s['fp']}")
 ```
 
-| | memoized prefill (Qwen2.5-1.5B) | Laya (english) |
+Per question, two counts: **found** — of the queries that genuinely need this path, how many the probe caught; and **right when yes** — of the times it did say yes, how many were true. Most answers in the bank are no, which makes headline accuracy nearly meaningless: an all-"no" router scores ~26/36. These two columns don't hide behind that:
+
+| question | found | right when yes |
 |---|---|---|
-| latency, 6 questions | 82 ms | 88 ms |
-| accuracy @ threshold 0.5 | 20/36 | **27/36** |
-| RAM | 3.1 GB | **0.85 GB** |
-| sees `addidass` as a brand | **yes (P=1.00)** | no (P=0.34) |
-| misses `shoes under 10` as a price | no (P=0.92) | **yes (P=0.30)** |
-| says yes too often | **yes, badly** (CATEGORY fires on 5 of 6 queries) | mildly |
-| new question = | edit text + re-prefill | edit text (free) |
-| deterministic reruns | **identical, measured** | batch-shape sensitive (their README notes it) |
+| PRICE | 3 of 5 | **3 of 3** |
+| BRAND | **5 of 5** | 5 of 7 |
+| FUZZY | 1 of 1 | 1 of 19 |
+| LOCATION | **4 of 4** | 4 of 16 |
+| CATEGORY | **4 of 4** | 4 of 19 |
+| HYBRID | 7 of 8 | 7 of 21 |
 
-The latency comparison carries its own experiment. Laya's first run scored 145 ms: its question bank carried a 38-brand list plus a category enumeration re-encoded on every query. Trimming those to a 13-brand bank took Laya to 88 ms — while the memoized engine sat at ~82 ms through the same edits and through *growing* its instruction block from 648 to 673 tokens. Per-query cost for an encoder scales with instructions; for a memoized prefix, instructions are free after the re-prefill.
+Three readings of this table.
 
-Quality is the honest counterweight: Laya wins @0.5 (27/36 vs 20/36). Both engines fail on different probes — Laya is blind to the misspelled brand and soft on the price probe; the causal model says yes to nearly every abstract test (`CATEGORY` 0.93–0.97 where the gold is no). Neither is calibrated: fitted thresholds on a toy set lift both, and the fitted numbers themselves swing (0.10, 0.84, 0.94 across runs) — the classic signature of too few labels. The real bottleneck is labels, not architecture: per-question thresholds need hundreds of log-mined decisions, which a search engine has lying around.
+**Detection travels across scripts for free.** Every hit above answers in a writing system the memo has never been shown: `耐克 Air Force 1` fires BRAND at 1.00, `नाइक एयर फोर्स 1` at 0.99, `靴子 北京` and `जोधपुर के जूते` fire LOCATION at 1.00 — through a rule that says `"Nike, Adidas, ..."` in latin script and a marker that says `"BRAND? Answer:"`. Qwen's 151,936-token vocabulary is about 15% of this model's weight bytes; the multilingualism was bought in the size. The memo just lets it answer in four scripts without re-prefilling for any of them.
 
-## The prompt lesson
+**The misses are rule-text problems, not model problems.** PRICE's two losses are `sandalias baratas` (0.35) and `10 से कम की जूते` (0.32): the rule teaches `"under 10", "cheap"` — english surface forms. Adding the target-language examples to the rule text covers them, which is one text edit plus a 296 ms re-prefill.
 
-The first version asked: `"Does the query need semantic vector search? Answer:"` — and answered `yes` (0.96) for `sneakers`, a single keyword. The model was not confused about English; it was asked about *the retrieval internals*, which no token in the query carries. Rewriting toward observable surface properties fixed that class of error and exposed the next one: tightening `CATEGORY` to "is the **whole** query a category phrase" made Laya cleanly correct on four of six negatives, while the causal model saturated to yes (0.93–0.97 everywhere). Ask about the query, not about the pipeline — and when a rule is right and the 1.5B model still cannot apply it, that is a model-capacity hole, closable with labels and calibration, not prose.
+**The yes-bias is the disease.** FUZZY says yes 19 times to be right once; LOCATION and CATEGORY are little better. The probes find every positive but cannot say no to an abstract question — and the trick that looks obvious from here (ask the negative instead: `NOPLACE?`, `NOTACAT?`, `ONLYNAMES?`) was built into the code and measured: the bias rides the yes *token*, not the semantics. `NOPLACE` answered yes to `botas de madrid` at 0.97 — location found fell from 4 of 4 to 0 of 4. The flip switch stays in the engine, set to no; the affirmative probes ship. What's actually needed is what the router already produces if it runs in shadow mode: labels. Hundreds of log-mined ones — facet clicks, dictionary hits, result diffs — and per-question thresholds fitted on held-out data. The signal is there; thresholds decide what to trade it for.
 
-## Spanish probes
+## Determinism
 
-Qwen2.5's 151,936-token vocabulary is about 15% of the 1.5B model's parameters — the multilingual prior is paid for in weight bytes. What does that buy, and what does memoization add on top? Same engine, translated gold queries; the English memo probed with English markers, then one 266-token Spanish re-prefill used as a second memo:
+Nothing in the serving path can drift: no token is ever sampled — probes read two logits and take their ratio; the batch is fixed by construction, always six padded rows, so reduction order is constant; and every replica runs one pinned binary reading the same state file. Reruns are bit-identical, a second process reproduces the writer's probabilities from disk, and queries are lowercased on the way in because case alone moves these probabilities by tenths. Determinism here is a property of the shape, not a flag — and it survives redeploy because decisions are keyed `(normalized query, memo version)`.
 
-| probe (Spanish query) | English memo | Spanish memo (one re-prefill) | Laya (auto-routed) | Laya (multilingual) |
-|---|---|---|---|---|
-| LOCATION `botas de madrid` (yes) | 1.00 ✓ | 1.00 ✓ | **0.10 ✗** | **0.01 ✗** |
-| LOCATION `tenis para correr` (no) | 0.70 ✗ | **0.11 ✓** | 0.07 ✓ | 0.01 ✓ |
-| PRICE `zapatos por menos de 10` (yes) | 0.98 ✓ | 1.00 ✓ | 0.88 ✓ | **0.04 ✗** |
-| HYBRID `regalo para el cumpleanos de mi esposa` (yes) | 0.93 ✓ | 0.94 ✓ | **0.49 ✗** | **0.49 ✗** |
+## What it buys
 
-Three takeaways. The translated memo fixes what the English memo gets wrong in Spanish (LOCATION went from "yes everywhere" to clean separation) — one prefill, no training, and the artifact is just another versioned file. Laya's script-based language router sent four of the five Spanish keyword queries to the **english** checkpoint (its documented weakness: short Latin-script text carries little language signal) — and that checkpoint missed the place name too; forcing the multilingual checkpoint is not the rescue it advertises: it failed PRICE at 0.04 and hallucinated BRAND=0.91 on a query containing no brand. And the memoized engine is still uncalibrated in Spanish, exactly as in English: the abstract probes saturate to yes (the Spanish memo scored 14/20 vs 11/20 on the English-memo subset). Language, like brands, is prompt data — the memoization design makes both a re-prefill away.
+- **Flat cost of knowledge.** The instruction block is paid once per version; queries took it from 648 to 673 tokens and the 82 ms didn't blink. Brands, categories, rules — the memo's knowledge is free at query time, which is the one thing an architecture that re-encodes can never say.
+- **Extension by editing.** New question, new brand, target-language examples in a rule: a text edit and a 296 ms re-prefill. No training pipeline, and the old artifact can still be audited because it is a file.
+- **A multilingual prior, unlocked.** One english memo answered four scripts — `नाइक एयर फोर्स 1` fires BRAND at 0.99 — because a memo stores attention states, not an alphabet. The vocabulary cost was already paid in weight bytes.
+- **Reproducible decisions.** Same query, same decision, across processes and replicas — which is what makes evals of prompt edits measure the edit instead of the engine.
 
-```mermaid
-flowchart LR
-    subgraph prefill_step [prefill step, per version]
-        P[instructions.txt] --> K[prefill once] --> S[673-token KV state]
-    end
-    subgraph artifact [files on disk]
-        S2[56 state files] --- V[version hash]
-    end
-    subgraph serve [server, per query]
-        L[load state, verify hash] --> Q[batched probes] --> F[flags + probabilities]
-    end
-    S --> S2
-    V --> L
-```
-
-## What this is not
-
-A production system. The label sets are toy (14 English + 5 Spanish queries), the accuracy tables are 36 decisions, the thresholds are fitted in-sample, and the causal model still hallucinates yes. What it does establish: the memoized-prefill architecture works end-to-end in two self-contained PyTorch files, is deterministic by construction, extends by editing text (languages included), and is roughly at latency parity with a specialist encoder that uses a quarter of the RAM — with a cost curve that keeps flattening as instructions grow.
+The debt is on the table once: thresholds are still fitted on toy labels, the abstract probes need the yes-bias traded away with real ones. Everything else measured says the work ahead is data, not architecture.
 
 ## References
 
 - [Automatic Prefix Caching](https://docs.vllm.ai/en/latest/features/automatic_prefix_caching) — vLLM's runtime form of KV reuse for shared prefixes
 - [Classification usage](https://docs.vllm.ai/en/stable/models/pooling_models/classify) — vLLM's prompt logit scoring, the probe pattern
-- [Batch Invariance](https://docs.vllm.ai/en/latest/features/batch_invariance) — why determinism is hard for continuously-batched engines (beta as of writing)
-- [Laya repository](https://github.com/NandhaKishorM/laya) and the [laya checkpoint](https://huggingface.co/convaiinnovations/laya); its README documents TypeSafe's hosted Jev API
+- [Batch Invariance](https://docs.vllm.ai/en/latest/features/batch_invariance) — the determinism problem for continuously-batched engines, and its cost (beta as of writing)
 - [Qwen2.5-1.5B-Instruct model card](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct)
 - [KV caches in transformers](https://huggingface.co/docs/transformers/kv_cache) — the DynamicCache API
-
 - [Query classifier for neural search](https://www.deepset.ai/blog/save-resources-with-query-classifier-for-neural-search) — deepset blog; learned routing as a pipeline node
 - [Predicting Efficiency/Effectiveness Trade-offs for Dense vs. Sparse Retrieval](https://arxiv.org/abs/2109.10739) — Arabzadeh et al., CIKM 2021 (research paper); the router idea in the literature

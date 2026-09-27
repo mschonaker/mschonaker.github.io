@@ -60,13 +60,13 @@ def main():
 
     def decide(query):
         query = " ".join(query.strip().lower().split())
-        rows = [(name, enc(f"\nUser query: {query}\n{marker}"), thr)
-                for name, (marker, thr) in meta["questions"].items()]
+        rows = [(name, enc(f"\nUser query: {query}\n{marker}"), thr, flip)
+                for name, (marker, thr, flip) in meta["questions"].items()]
         n = len(rows)
         L = max(len(toks) for _, toks, _ in rows)
         input_ids = torch.full((n, L), pad, device=device, dtype=torch.long)
         new_mask = torch.zeros((n, L), device=device, dtype=torch.long)
-        for i, (_, toks, _) in enumerate(rows):
+        for i, (_, toks, _, _) in enumerate(rows):
             input_ids[i, :len(toks)] = torch.tensor(toks, device=device)
             new_mask[i, :len(toks)] = 1
         cache = DynamicCache()
@@ -79,10 +79,10 @@ def main():
                        position_ids=pos, attention_mask=attn,
                        use_cache=False).logits
         out = {}
-        for i, (name, toks, thr) in enumerate(rows):
+        for i, (name, toks, thr, flip) in enumerate(rows):
             z = logits[i, len(toks) - 1, YES].float()
             p = float(torch.softmax(z, -1)[0])
-            out[name] = (p >= thr, p)
+            out[name] = ((p >= thr) != flip, p)
         return out
 
     for query in queries:
