@@ -370,7 +370,7 @@ print(f"laya accuracy @0.5 (fixed CATEGORY rule): {hit}/{tot} | p50 {sorted(lat)
 
 The latency comparison carries its own experiment. Laya's first run scored 145 ms: its question bank carried a 38-brand list plus a category enumeration re-encoded on every query. Trimming those to a 13-brand bank took Laya to 88 ms — while the memoized engine sat at ~82 ms through the same edits and through *growing* its instruction block from 648 to 673 tokens. Per-query cost for an encoder scales with instructions; for a memoized prefix, instructions are free after the re-prefill.
 
-Quality is the honest counterweight: Laya wins @0.5 (27/36 vs 20/36). Both engines fail on different probes — Laya is blind to the misspelled brand and soft on the price probe; the causal model says yes to nearly every abstract test (`CATEGORY` 0.93–0.97 where the gold is no). Neither is calibrated: fitted thresholds on a toy set lift both, and the fitted numbers themselves swing (0.10, 0.84, 0.94 across runs) — the classic signature of too few labels. The RLCD-tuned `laya-typed-decisions` checkpoint was tried too and is a null result here: same 27/36, but every probability compresses into 0.06–0.76, so the misspelled-brand error survives at P=0.49 — still wrong, just more confident about being wrong. The real bottleneck is labels, not architecture: per-question thresholds need hundreds of log-mined decisions, which a search engine has lying around.
+Quality is the honest counterweight: Laya wins @0.5 (27/36 vs 20/36). Both engines fail on different probes — Laya is blind to the misspelled brand and soft on the price probe; the causal model says yes to nearly every abstract test (`CATEGORY` 0.93–0.97 where the gold is no). Neither is calibrated: fitted thresholds on a toy set lift both, and the fitted numbers themselves swing (0.10, 0.84, 0.94 across runs) — the classic signature of too few labels. The real bottleneck is labels, not architecture: per-question thresholds need hundreds of log-mined decisions, which a search engine has lying around.
 
 ## The prompt lesson
 
@@ -410,14 +410,12 @@ A production system. The label sets are toy (14 English + 5 Spanish queries), th
 
 ## References
 
-**Official sources:**
 - [Automatic Prefix Caching](https://docs.vllm.ai/en/latest/features/automatic_prefix_caching) — vLLM's runtime form of KV reuse for shared prefixes
 - [Classification usage](https://docs.vllm.ai/en/stable/models/pooling_models/classify) — vLLM's prompt logit scoring, the probe pattern
 - [Batch Invariance](https://docs.vllm.ai/en/latest/features/batch_invariance) — why determinism is hard for continuously-batched engines (beta as of writing)
-- [Laya repository](https://github.com/NandhaKishorM/laya) with the [english](https://huggingface.co/convaiinnovations/laya) and [typed-decisions](https://huggingface.co/convaiinnovations/laya-typed-decisions) checkpoints; its README also documents TypeSafe's hosted Jev API
+- [Laya repository](https://github.com/NandhaKishorM/laya) and the [laya checkpoint](https://huggingface.co/convaiinnovations/laya); its README documents TypeSafe's hosted Jev API
 - [Qwen2.5-1.5B-Instruct model card](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct)
 - [KV caches in transformers](https://huggingface.co/docs/transformers/kv_cache) — the DynamicCache API
 
-**Ecosystem sources, for context only:**
-- [Query classifier for neural search](https://www.deepset.ai/blog/save-resources-with-query-classifier-for-neural-search) — deepset; learned routing as a pipeline node
-- [Predicting Efficiency/Effectiveness Trade-offs for Dense vs. Sparse Retrieval](https://arxiv.org/abs/2109.10739) — Arabzadeh et al., CIKM 2021; the router idea in the research literature
+- [Query classifier for neural search](https://www.deepset.ai/blog/save-resources-with-query-classifier-for-neural-search) — deepset blog; learned routing as a pipeline node
+- [Predicting Efficiency/Effectiveness Trade-offs for Dense vs. Sparse Retrieval](https://arxiv.org/abs/2109.10739) — Arabzadeh et al., CIKM 2021 (research paper); the router idea in the literature

@@ -17,8 +17,7 @@ Run:
 ```
 uv run memoize.py
 uv run server.py memo "shoes under 10" "gift for wife birthday"
-uv run laya_router_task.py english
-uv run laya_router_task.py typed-decisions
+uv run laya_router_task.py
 ```
 
 Blog post: `_posts/memoized-prefill-llm-router.md`.
