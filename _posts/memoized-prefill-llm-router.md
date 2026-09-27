@@ -319,9 +319,9 @@ Laya is the open-source, Apache-licensed clone of the Jev decision model: a Mode
 # dependencies = ["laya"]
 # ///
 """Router task through Laya: same queries and gold labels as the causal
-engine. Usage: laya_router_task.py [english|typed-decisions]
+engine. Usage: python laya_router_task.py
 """
-import sys, time
+import time
 from laya import Router
 QUESTIONS = {
     "PRICE":    {"type": "noul", "instructions": "Does the query bound a price, for example 'under 10', 'cheap', '50 to 100'?"},
@@ -340,12 +340,11 @@ GOLD = {
     "gift for wife birthday": {"PRICE": 0, "BRAND": 0, "FUZZY": 0, "LOCATION": 0, "HYBRID": 1, "CATEGORY": 0},
 }
 r = Router()
-model = sys.argv[1] if len(sys.argv) > 1 else None
 lat = []
 hit = tot = 0
 for q, gold in GOLD.items():
     t0 = time.perf_counter()
-    res = r.predict(q, QUESTIONS, model=(model if model != "auto" else None))
+    res = r.predict(q, QUESTIONS)
     lat.append((time.perf_counter() - t0) * 1000)
     p = {k: v["noul"] for k, v in res["answers"].items()}
     cells = []
