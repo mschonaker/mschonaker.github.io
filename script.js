@@ -217,6 +217,7 @@ async function renderArticle(post) {
       if (typeof mermaid !== 'undefined' && document.querySelector('.mermaid')) {
         mermaid.initialize({ startOnLoad: false, theme: 'dark', themeVariables: { fontSize: '14px' }, flowchart: { useMaxWidth: false } });
         await mermaid.run({ querySelector: '.mermaid' });
+        addDiagramSweeps();
       }
       postsContainer.querySelectorAll('pre code').forEach(block => {
         const classes = block.className.split(' ').filter(c => c.startsWith('language-'));
@@ -234,6 +235,53 @@ async function renderArticle(post) {
   } catch (error) {
     postsContainer.innerHTML = '<div class="post">Error loading article</div>';
   }
+}
+
+function addDiagramSweeps() {
+  document.querySelectorAll('.mermaid svg').forEach((svg) => {
+    const anims = [];
+    svg.querySelectorAll('.node rect, .node polygon, .node circle, .node ellipse, .node path').forEach((shape) => {
+      if (shape.closest('foreignObject') || shape.classList.contains('sweep-shape')) return;
+      const anim = attachSweep(shape, shape.parentNode);
+      if (anim) anims.push(anim);
+    });
+    svg.querySelectorAll('g.edgePaths > path').forEach((path) => {
+      if (path.classList.contains('sweep-shape')) return;
+      const anim = attachSweep(path, path.parentNode);
+      if (anim) anims.push(anim);
+    });
+    if (!anims.length) return;
+    svg.addEventListener('mouseenter', () => anims.forEach((a) => a.play()));
+    svg.addEventListener('mouseleave', () => anims.forEach((a) => a.pause()));
+  });
+}
+
+function attachSweep(shape, parent) {
+  let len = 0;
+  try {
+    len = shape.getTotalLength();
+  } catch (e) {
+    return null;
+  }
+  if (!isFinite(len) || len < 20 || typeof shape.animate !== 'function') return null;
+  const sweep = shape.cloneNode(false);
+  sweep.setAttribute('class', 'sweep-shape');
+  sweep.removeAttribute('id');
+  sweep.removeAttribute('style');
+  sweep.removeAttribute('marker-end');
+  sweep.removeAttribute('marker-start');
+  const dash = Math.max(14, len * 0.18);
+  sweep.style.strokeDasharray = dash + ' ' + (len - dash);
+  parent.appendChild(sweep);
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+  const dur = Math.min(6000, Math.max(2500, len / 90 * 1000));
+  const anim = sweep.animate(
+    [{ strokeDashoffset: '0' }, { strokeDashoffset: String(-len) }],
+    { duration: dur, easing: 'linear', iterations: Infinity }
+  );
+  anim.pause();
+  anim.currentTime = len % dur;
+  return anim;
 }
 
 function viewArticle(id) {
