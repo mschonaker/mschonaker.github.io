@@ -145,6 +145,17 @@ a:visited {
   to { --sweep-x: 150%; }
 }
 
+@property --sweep-f {
+  syntax: '<number>';
+  initial-value: 1.5;
+  inherits: true;
+}
+
+@keyframes block-sweep {
+  from { --sweep-f: -0.12; }
+  to { --sweep-f: 1.5; }
+}
+
 .post,
 .article-content pre,
 .article-content table {
@@ -158,10 +169,12 @@ a:visited {
 }
 
 .post:hover,
-.article-content pre:hover,
-.article-content .code-block:hover pre,
 .article-content table:hover {
   animation: border-sweep 6s linear infinite;
+}
+
+.article-content .code-block:hover {
+  animation: block-sweep 6s linear infinite;
 }
 
 .post {
@@ -518,10 +531,17 @@ a:visited {
 .article-content .code-block {
   position: relative;
   margin: 16px 0;
+  --block-w: 100%;
 }
 
 .article-content .code-block pre {
   margin: 0;
+  background:
+    linear-gradient(var(--edge-bg), var(--edge-bg)) padding-box,
+    linear-gradient(90deg,
+      var(--edge-base) calc(var(--sweep-f) * 100% - 15%),
+      var(--edge-glow) calc(var(--sweep-f) * 100%),
+      var(--edge-base) calc(var(--sweep-f) * 100% + 15%)) border-box;
 }
 
 .article-content .code-block:hover pre,
@@ -538,21 +558,43 @@ a:visited {
   font-family: inherit;
   text-transform: uppercase;
   color: var(--text-muted);
-  background: var(--code-bg);
-  border: 1px solid var(--code-border);
+  --edge-bg: var(--code-bg);
+  --edge-base: var(--code-border);
+  --edge-glow: var(--accent);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--edge-bg), var(--edge-bg)) padding-box,
+    linear-gradient(90deg,
+      var(--edge-base) calc((var(--sweep-f) - 1) * var(--block-w) + 100% - 0.15 * var(--block-w)),
+      var(--edge-glow) calc((var(--sweep-f) - 1) * var(--block-w) + 100%),
+      var(--edge-base) calc((var(--sweep-f) - 1) * var(--block-w) + 100% + 0.15 * var(--block-w))) border-box;
   border-radius: 0 4px 0 4px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: opacity 0.15s ease, color 0.15s ease;
 }
 
 .code-block:hover .copy-btn {
   opacity: 1;
 }
 
+.mermaid-block .copy-btn {
+  background:
+    linear-gradient(var(--edge-bg), var(--edge-bg)) padding-box,
+    linear-gradient(90deg,
+      var(--edge-base) calc(var(--sweep-x) - 15%),
+      var(--edge-glow) var(--sweep-x),
+      var(--edge-base) calc(var(--sweep-x) + 15%)) border-box;
+}
+
+.mermaid-block:hover .copy-btn {
+  animation: border-sweep 6s linear infinite;
+}
+
 .copy-btn:hover {
   color: var(--accent-hover);
-  border-color: var(--accent-hover);
+  --edge-base: var(--accent-hover);
+  --edge-glow: var(--accent-hover);
 }
 
 .article-content .mermaid-scroll {

@@ -54,6 +54,14 @@ function clearHash() {
   history.replaceState(null, '', window.location.pathname);
 }
 
+function updateCodeBlockWidths() {
+  document.querySelectorAll('.code-block').forEach(block => {
+    block.style.setProperty('--block-w', block.offsetWidth + 'px');
+  });
+}
+
+window.addEventListener('resize', updateCodeBlockWidths);
+
 async function renderPosts() {
   const sorted = [...posts].sort((a, b) => b.timestamp - a.timestamp);
   
@@ -232,6 +240,7 @@ async function renderArticle(post) {
     } catch (e) {
       console.error('Highlight error:', e);
     }
+    updateCodeBlockWidths();
   } catch (error) {
     postsContainer.innerHTML = '<div class="post">Error loading article</div>';
   }
