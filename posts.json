@@ -1,5 +1,18 @@
 [
   {
+    "id": "llm002",
+    "type": "article",
+    "file": "_posts/jev-systemone-search-router.md",
+    "timestamp": 1791676800,
+    "summary": "In the previous article we ran the search router from cached attention state on a local Qwen model. Here we run the same six questions over the same 22-query bank on OpenCode Zen's hosted decision model, Jev 1.13 Free, and compare precision, turnaround, and determinism.",
+    "image": "/images/jev-systemone-search-router.jpg",
+    "tags": [
+      "ai",
+      "ml",
+      "python"
+    ]
+  },
+  {
     "id": "llm001",
     "type": "article",
     "file": "_posts/memoized-prefill-llm-router.md",
