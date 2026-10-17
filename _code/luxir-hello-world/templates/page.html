@@ -1,0 +1,36 @@
+{{define "page"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hello World Search</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+  {{template "style" .}}
+</head>
+<body>
+  <header>
+    <a class="logo" href="/">Hello World Search</a>
+    <form hx-get="/" hx-target="#results" hx-swap="innerHTML" hx-push-url="true"
+          hx-on::after-request="if (event.detail.pathInfo.requestPath === '/') { document.getElementById('q').dispatchEvent(new CustomEvent('htmx:abort')); document.querySelector('.ta').innerHTML='' }">
+      <input type="search" id="q" name="q" value="{{.State.Q}}" placeholder="Search 10,000 products…"
+             autocomplete="off" hx-get="/typeahead" hx-target=".ta" hx-swap="innerHTML"
+             hx-trigger="keyup[event.key != 'Enter' && event.key != 'Escape'] changed delay:150ms"
+             hx-on::blur="this.dispatchEvent(new CustomEvent('htmx:abort')); setTimeout(() => document.querySelector('.ta').innerHTML='', 250)">
+      <button type="submit">Search</button>
+      <div class="ta"></div>
+    </form>
+  </header>
+  <div id="results" hx-history-elt hx-history="false" hx-target="#results" hx-swap="innerHTML" hx-push-url="true">
+    {{template "srp" .}}
+  </div>
+  <script>
+    // hx-on::keydown proved unreliable on the input; a plain listener closes
+    // the dropdown on Escape (and blurs, since type=search clears natively).
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && e.target.id === 'q') { e.target.blur(); document.querySelector('.ta').innerHTML = ''; }
+    });
+  </script>
+</body>
+</html>
+{{end}}

@@ -1,5 +1,18 @@
 [
   {
+    "id": "luxir001",
+    "type": "article",
+    "file": "_posts/luxir-hello-world.md",
+    "timestamp": 1792108800,
+    "summary": "Ten thousand Algolia ecommerce products, one Luxir binary, one Go file: typeahead, faceted results, and a product page, each in a single request.",
+    "image": "/images/luxir-hello-world.png",
+    "tags": [
+      "search",
+      "go",
+      "htmx"
+    ]
+  },
+  {
     "id": "llm002",
     "type": "article",
     "file": "_posts/jev-systemone-search-router.md",
