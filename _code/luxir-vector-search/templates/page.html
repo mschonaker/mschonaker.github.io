@@ -1,0 +1,80 @@
+{{define "page"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hybrid Search — Luxir + Zig + Go</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+  {{template "style" .}}
+</head>
+<body>
+  <header>
+    <a class="logo" href="/">Hybrid Search</a>
+    <form hx-get="/" hx-target="#results" hx-swap="innerHTML" hx-push-url="true">
+      <!-- hx-push-url="false": htmx inherits attributes down the tree, so the form's
+           hx-push-url would otherwise apply to this input's /typeahead request
+           and push /typeahead?q=... into the address bar while you type. -->
+      <input type="search" id="q" name="q" value="{{.State.Q}}" placeholder="Search 10,000 products by words, vectors, or both…"
+             autocomplete="off" hx-get="/typeahead" hx-target=".ta" hx-swap="innerHTML"
+             hx-trigger="keyup[event.key != 'Enter' && event.key != 'Escape'] changed delay:150ms"
+             hx-push-url="false">
+      <button type="submit">Search</button>
+      <div class="ta" hx-on::before-swap="if (window.typeaheadClosed) event.detail.shouldSwap = false"></div>
+    </form>
+  </header>
+  <div id="results" hx-history-elt hx-history="false" hx-target="#results" hx-swap="innerHTML" hx-push-url="true">
+    {{template "srp" .}}
+  </div>
+  <script>
+    // The typeahead runs on a 150 ms debounce, and htmx gives no way to cancel
+    // a pending one. Pressing Enter submits the form before that timer fires,
+    // so the /typeahead request is issued *after* the results have arrived and
+    // repopulates the dropdown over them. Closing is therefore two parts: clear
+    // the dropdown now, and drop any response still in flight.
+    //
+    // The guard lives on .ta because htmx fires beforeSwap on the swap target,
+    // not on the element that issued the request. An hx-on::before-swap on the
+    // input never sees it.
+    window.typeaheadClosed = false;
+
+    window.closeTypeahead = function (delayMs) {
+      window.typeaheadClosed = true;
+      document.getElementById('q').dispatchEvent(new CustomEvent('htmx:abort'));
+      var clear = function () { document.querySelector('.ta').innerHTML = ''; };
+      if (delayMs) { setTimeout(clear, delayMs); } else { clear(); }
+    };
+
+    var input = document.getElementById('q');
+
+    // Both of these are plain listeners on purpose. htmx delegates hx-on::
+    // listeners, and blur does not bubble, so hx-on::blur never runs.
+    input.addEventListener('blur', function () {
+      // 250 ms, because clearing on blur deletes a suggestion between mousedown
+      // and mouseup and the click never lands.
+      window.closeTypeahead(250);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.target.id !== 'q') return;
+      if (e.key === 'Escape') {
+        // Blur, so that type=search clears itself the way it does natively.
+        e.target.blur();
+        window.closeTypeahead(0);
+        return;
+      }
+      if (e.key === 'Enter') {
+        // Deliberately no blur. Implicit submission is the default action of
+        // the Enter keydown, and moving focus away inside the handler cancels
+        // it, so the form would never submit. Close the dropdown and let the
+        // form do its own thing.
+        window.closeTypeahead(0);
+        return;
+      }
+      // Any other key reopens it, and clears the flag before the debounce lands.
+      window.typeaheadClosed = false;
+    });
+  </script>
+</body>
+</html>
+{{end}}

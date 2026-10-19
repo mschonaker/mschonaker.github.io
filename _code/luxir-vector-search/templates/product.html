@@ -1,0 +1,58 @@
+{{define "product"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.P.Title}} · Hello World Search</title>
+  {{template "style" .}}
+</head>
+<body>
+  <header>
+    <a class="logo" href="/">Hello World Search</a>
+    <form action="/" method="get">
+      <input type="search" name="q" placeholder="Search 10,000 products…" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
+  </header>
+  <nav class="crumbs">
+    <a href="/">Search</a>
+    {{if .Category}}<span>›</span><a href="{{.CategoryURL}}">{{.Category}}</a>{{end}}
+    {{if .P.Brand}}<span>›</span><a href="{{.BrandURL}}">{{.P.Brand}}</a>{{end}}
+    <span>›</span><b>{{.P.Title}}</b>
+  </nav>
+  <div class="pdp">
+    <img src="{{.P.Image}}" onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAAAAACw='" alt="">
+    <div>
+      <h1>{{.P.Title}}</h1>
+      <div class="price">{{price .P.Price}}</div>
+      <section>
+        Brand: <a href="{{.BrandURL}}">{{.P.Brand}}</a>
+        {{if .P.Reviews}} · {{.P.Reviews}} customer reviews{{end}}
+      </section>
+      {{if .P.Categories}}<section>
+        {{range $c := .P.Categories}}<a href="/?category={{urlquery $c}}">{{$c}}</a> {{end}}
+      </section>{{end}}
+      <section>{{.P.Desc}}</section>
+    </div>
+  </div>
+  {{if .Related}}
+  <div class="srp">
+    <main>
+      <h2>You might also like</h2>
+      <div class="grid">
+        {{range .Related}}
+        <a class="card" href="/product/{{.ID}}">
+          <img src="{{.Image}}" onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAAAAACw='" alt="">
+          <div class="card-title">{{.Title}}</div>
+          <div class="card-brand">{{.Brand}}</div>
+          <div class="card-price">{{price .Price}}</div>
+        </a>
+        {{end}}
+      </div>
+    </main>
+  </div>
+  {{end}}
+</body>
+</html>
+{{end}}

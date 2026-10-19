@@ -1,0 +1,9 @@
+products.ndjson
+products_v.ndjson
+bestbuy_seo.json
+embed.log
+app.log
+embedder/.zig-cache/
+embedder/zig-out/
+embedder/model.onnx
+embedder/tokenizer.json

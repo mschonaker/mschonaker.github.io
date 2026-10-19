@@ -1,0 +1,17 @@
+{{define "typeahead"}}
+{{if or .Products .Brands .Cats}}
+<div class="ta-box">
+  {{if .Products}}<div class="ta-row"><b>Products</b>
+    {{range .Products}}<a class="ta-item" href="/product/{{.ID}}"><img src="{{.Image}}" onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAAAAACw='" alt=""><span>{{.Title}}</span><i>{{price .Price}}</i></a>{{end}}
+  </div>{{end}}
+  {{if .Brands}}<div class="ta-row"><b>Brands</b>
+    {{range .Brands}}<a href="{{.URL}}">{{.Label}}<span>{{.Count}}</span></a>{{end}}
+  </div>{{end}}
+  {{if .Cats}}<div class="ta-row"><b>Categories</b>
+    {{range .Cats}}<a href="{{.URL}}">{{.Label}}<span>{{.Count}}</span></a>{{end}}
+  </div>{{end}}
+</div>
+{{else}}
+<div class="ta-box ta-none">No matches</div>
+{{end}}
+{{end}}

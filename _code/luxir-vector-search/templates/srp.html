@@ -1,0 +1,50 @@
+{{define "srp"}}
+<section class="srp">
+  <aside class="facets">
+    <h2>Refine</h2>
+    {{if .Chips}}
+    <div class="chips">
+      {{range .Chips}}<a hx-get="{{.URL}}" href="{{.URL}}">{{.Label}} ✕</a>{{end}}
+      <a class="clear" hx-get="{{.ClearURL}}" href="{{.ClearURL}}">Clear all</a>
+    </div>
+    {{end}}
+    <h3>Category</h3>
+    <ul>{{range .Categories}}<li{{if .Active}} class="on"{{end}}><a hx-get="{{.URL}}" href="{{.URL}}">{{.Label}}<span>{{.Count}}</span></a></li>{{end}}</ul>
+    <h3>Brand</h3>
+    <ul>{{range .Brands}}<li{{if .Active}} class="on"{{end}}><a hx-get="{{.URL}}" href="{{.URL}}">{{.Label}}<span>{{.Count}}</span></a></li>{{end}}</ul>
+    <h3>Price</h3>
+    <ul>{{range .Prices}}<li{{if .Active}} class="on"{{end}}><a hx-get="{{.URL}}" href="{{.URL}}">{{.Label}}<span>{{.Count}}</span></a></li>{{end}}</ul>
+  </aside>
+  <main>
+    <div class="modes">
+      <span class="modes-label">Rank by</span>
+      {{range .Modes}}<a class="{{if eq .Key $.State.Mode}}on{{end}}" hx-get="{{.URL}}" href="{{.URL}}">{{.Label}}</a>{{end}}
+    </div>
+    <p class="meta"><b>{{.Found}}</b> products · {{printf "%.1f ms" .TookMS}} round trip{{if .State.Q}} for “{{.State.Q}}”{{end}}{{if ne .State.Mode "words"}} · {{printf "%.1f ms" .EmbedMS}} to embed the query{{end}}{{with .AvgPrice}} · average price {{price .}}{{end}}</p>
+    {{if .State.Pool}}
+    <div class="sorts"><span class="sorts-label">Candidate pool per source</span>{{range .Pools}}<a{{if .Active}} class="on"{{end}} hx-get="{{.URL}}" href="{{.URL}}">{{.Label}}</a>{{end}}</div>
+    {{end}}
+    <div class="sorts">{{range .Sorts}}<a{{if .Active}} class="on"{{end}} hx-get="{{.URL}}" href="{{.URL}}">{{.Label}}</a>{{end}}</div>
+    {{if .Docs}}
+    <div class="grid">
+      {{range .Docs}}
+      <a class="card" href="/product/{{.ID}}">
+        <img src="{{.Image}}" onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAAAAACw='" alt="">
+        <div class="card-title">{{.Title}}</div>
+        <div class="card-brand">{{.Brand}}</div>
+        <div class="card-price">{{price .Price}}</div>
+        {{if $.State.Q}}<div class="card-score">{{if eq $.State.Mode "hybrid"}}rrf{{else if eq $.State.Mode "vectors"}}cos{{else}}bm25{{end}} {{printf "%.5f" .Score}}</div>{{end}}
+      </a>
+      {{end}}
+    </div>
+    {{else}}
+    <div class="empty">Nothing matched. Try fewer words.</div>
+    {{end}}
+    <p class="pager">
+      {{with .Prev}}<a hx-get="{{.}}" href="{{.}}">← Previous</a>{{end}}
+      Page {{.State.Page}} of {{.LastPage}}
+      {{with .Next}}<a hx-get="{{.}}" href="{{.}}">Next →</a>{{end}}
+    </p>
+  </main>
+</section>
+{{end}}

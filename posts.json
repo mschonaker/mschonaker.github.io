@@ -1,5 +1,19 @@
 [
   {
+    "id": "luxir002",
+    "type": "article",
+    "file": "_posts/luxir-vector-search.md",
+    "timestamp": 1792281600,
+    "summary": "Adding 384-dimension MiniLM vectors to ten thousand products: what indexing costs, how reciprocal rank fusion merges BM25 with kNN, and the four integration traps that cost me an afternoon.",
+    "image": "/images/luxir-vector-search.png",
+    "tags": [
+      "search",
+      "vector",
+      "zig",
+      "go"
+    ]
+  },
+  {
     "id": "luxir001",
     "type": "article",
     "file": "_posts/luxir-hello-world.md",
