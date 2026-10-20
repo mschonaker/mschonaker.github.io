@@ -41,7 +41,12 @@
   <footer class="copyleft">
     <span class="prompt">©</span> copyleft - no rights reserved
   </footer>
-  
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview" hidden>
+    <button class="lightbox-close" type="button" aria-label="Close">×</button>
+    <img class="lightbox-image" id="lightbox-image" alt="">
+  </div>
+
   <!-- formatDate: uses toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) -->
 <script src="script.js"></script>
 </body>

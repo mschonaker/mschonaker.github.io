@@ -31,7 +31,8 @@ function parseMarkdown(text) {
   renderer.code = function(code, lang) {
     const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     if (lang === 'mermaid') {
-      return `<div class="code-block mermaid-block"><button class="copy-btn" type="button" title="Copy Mermaid source">Copy</button><div class="mermaid-scroll"><div class="mermaid">${code}</div></div><code class="mermaid-source" hidden>${escaped}</code></div>`;
+      const source = code.replace(/^(\s*(?:flowchart|graph)\s+)(?:LR|RL)\b/m, '$1TB');
+      return `<div class="code-block mermaid-block"><button class="copy-btn" type="button" title="Copy Mermaid source">Copy</button><div class="mermaid-scroll"><div class="mermaid">${source}</div></div><code class="mermaid-source" hidden>${escaped}</code></div>`;
     }
     return `<div class="code-block"><button class="copy-btn" type="button" title="Copy to clipboard">Copy</button><pre><code class="language-${lang}">${escaped}</code></pre></div>`;
   };
@@ -304,7 +305,26 @@ function viewArticle(id) {
 function closeArticle() {
   currentView = null;
   clearHash();
+  closeLightbox();
   renderPosts();
+}
+
+function openLightbox(image) {
+  const box = document.getElementById('lightbox');
+  const view = document.getElementById('lightbox-image');
+  if (!box || !view) return;
+  view.src = image.currentSrc || image.src;
+  view.alt = image.alt || '';
+  box.hidden = false;
+  document.body.classList.add('lightbox-open');
+}
+
+function closeLightbox() {
+  const box = document.getElementById('lightbox');
+  if (!box || box.hidden) return;
+  box.hidden = true;
+  document.body.classList.remove('lightbox-open');
+  document.getElementById('lightbox-image').removeAttribute('src');
 }
 
 window.addEventListener('hashchange', () => {
@@ -365,6 +385,23 @@ document.addEventListener('click', (event) => {
   } else if (copyViaExecCommand(text)) {
     showCopied();
   }
+});
+
+document.addEventListener('click', (event) => {
+  const image = event.target.closest('.article-content img');
+  if (image) {
+    event.preventDefault();
+    openLightbox(image);
+    return;
+  }
+  const box = event.target.closest('.lightbox');
+  if (box && (event.target === box || event.target.closest('.lightbox-close'))) {
+    closeLightbox();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeLightbox();
 });
 
 document.addEventListener('DOMContentLoaded', () => {
