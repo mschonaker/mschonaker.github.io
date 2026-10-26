@@ -451,6 +451,25 @@ a:visited {
   cursor: pointer;
 }
 
+.tag-more {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  background: hsl(0 0% 60% / 0.1);
+  border: 1px dashed hsl(0 0% 60% / 0.4);
+  cursor: pointer;
+  user-select: none;
+}
+
+.tag-more:hover {
+  color: var(--text-bright);
+  border-style: solid;
+  border-color: hsl(0 0% 70% / 0.6);
+}
+
 .tag-pill-active {
   background: hsl(var(--pill-hue) 60% 45% / 0.5);
   color: var(--text-bright);

@@ -148,6 +148,9 @@ function tagPills(tags) {
 
 let activeTag = null;
 let currentView = null;
+let tagsExpanded = false;
+
+const COLLAPSED_TAG_COUNT = 9;
 
 function renderTagBar() {
   const bar = document.getElementById('tag-bar');
@@ -161,11 +164,23 @@ function renderTagBar() {
     return;
   }
   const tags = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || a.localeCompare(b));
-  bar.innerHTML = tags.map(tag => {
+  let visible = tags;
+  if (!tagsExpanded && tags.length > COLLAPSED_TAG_COUNT) {
+    visible = tags.slice(0, COLLAPSED_TAG_COUNT);
+    if (activeTag && !visible.includes(activeTag)) visible.push(activeTag);
+  }
+  const pill = tag => {
     const hue = tagColor(tag);
     const active = tag === activeTag ? ' tag-pill-active' : '';
     return `<span class="tag-pill${active}" style="--pill-hue: ${hue}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`;
-  }).join('');
+  };
+  let html = visible.map(pill).join('');
+  if (tags.length > COLLAPSED_TAG_COUNT) {
+    html += tagsExpanded
+      ? `<span class="tag-more" role="button" tabindex="0">show less</span>`
+      : `<span class="tag-more" role="button" tabindex="0">show more (+${tags.length - COLLAPSED_TAG_COUNT})</span>`;
+  }
+  bar.innerHTML = html;
   bar.hidden = false;
 }
 
@@ -176,6 +191,11 @@ function selectTag(tag) {
 }
 
 document.addEventListener('click', (event) => {
+  if (event.target.closest('#tag-bar .tag-more')) {
+    tagsExpanded = !tagsExpanded;
+    renderTagBar();
+    return;
+  }
   const pill = event.target.closest('#tag-bar .tag-pill');
   if (!pill) return;
   selectTag(pill.dataset.tag);
