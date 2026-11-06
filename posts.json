@@ -1,5 +1,19 @@
 [
   {
+    "id": "llm003",
+    "type": "article",
+    "file": "_posts/zen-memory-proxy.md",
+    "timestamp": 1793836800,
+    "summary": "A chat client can send only messages. A small proxy can run the tools, keep the key, and give every OpenAI-compatible client the same tools without a plugin.",
+    "image": "/images/zen-memory-proxy.jpg",
+    "tags": [
+      "ai",
+      "llm",
+      "python",
+      "sqlite"
+    ]
+  },
+  {
     "id": "luxir002",
     "type": "article",
     "file": "_posts/luxir-vector-search.md",
