@@ -1,5 +1,19 @@
 [
   {
+    "id": "llm004",
+    "type": "article",
+    "file": "_posts/zen-skills-proxy.md",
+    "timestamp": 1794009600,
+    "summary": "A second proxy. The model learns reusable skills and durable facts, loads a skill only when it needs it, carries facts as policy into the next session, and runs MCP tools from a Docker gateway.",
+    "image": "/images/zen-skills-proxy.png",
+    "tags": [
+      "ai",
+      "llm",
+      "python",
+      "sqlite"
+    ]
+  },
+  {
     "id": "llm003",
     "type": "article",
     "file": "_posts/zen-memory-proxy.md",
